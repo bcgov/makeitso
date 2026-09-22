@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "A deployment orchestrator for GitHub-hosted projects."
 readme = "README.md"
 authors = [
-    { name = "Dylan", email = "dylan.1.leard@gov.bc.ca" }
+    { name = "Dylan", email = "dylan.1.leard@gov.bc.ca" },
+    { name = "Sepehr", email = "sepehr.sobhani@gov.bc.ca" },
+    { name = "Pierre", email = "pierre.bastianelli@gov.bc.ca" },
 ]
 requires-python = ">=3.14"
 dependencies = [
@@ -18,10 +20,7 @@ requires = ["uv_build>=0.12.17,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = [
-    "ruff>=0.16.8",
-    "ty>=0.0.83",
-]
+dev = ["ruff>=0.16.8", "ty>=0.0.83"]
 
 [tool.ruff]
 line-length = 100
