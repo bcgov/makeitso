@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "makeitso.fullname" . }}-redis
+  labels:
+    {{- include "makeitso.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: {{ include "makeitso.fullname" . }}-redis
+  selector:
+    {{- include "makeitso.selectorLabels" . | nindent 4 }}
+    component: redis

@@ -1,0 +1,19 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "makeitso.fullname" . }}-internal-instance
+  labels: {{ include "makeitso.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ include "makeitso.name" . }}
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ include "makeitso.name" . }}
+        - podSelector:
+            matchLabels:
+              release: {{ include "makeitso.name" . }}
+  policyTypes:
+    - Ingress

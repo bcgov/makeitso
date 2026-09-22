@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "makeitso.fullname" . }}-app
+  labels:
+    component: app
+{{- include "makeitso.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      {{- include "makeitso.selectorLabels" . | nindent 6 }}
+      component: app
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+{{- include "makeitso.selectorLabels" . | nindent 8 }}
+        component: app
+    spec:
+      containers:
+        - name: {{ template "makeitso.fullname" . }}-app
+          image: {{ .Values.app.image }}
+          imagePullPolicy: {{ .Values.app.imagePullPolicy }}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: makeitso-db-pguser-postgres
+                  key: uri
+            - name: REDIS_SERVER_HOST
+              value: {{ include "makeitso.fullname" . }}-redis.{{ .Namespace }}.svc.cluster.local
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+      restartPolicy: Always
