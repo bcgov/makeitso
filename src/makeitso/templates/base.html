@@ -6,6 +6,7 @@
   <title>{% block title %}makeitso{% endblock %}</title>
   {{ bootstrap.load_css() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <script src="{{ url_for('static', filename='vendor/htmx/htmx.min.js') }}" defer></script>
 </head>
 <body>
   <nav class="navbar bg-primary bc-header" data-bs-theme="dark">

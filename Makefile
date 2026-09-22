@@ -2,6 +2,9 @@
 UV := $(or $(shell command -v uv 2>/dev/null),$(HOME)/.local/bin/uv)
 FLASK := $(UV) run flask --app makeitso
 
+HTMX_VERSION := 2.0.11
+VENDOR_DIR := src/makeitso/static/vendor
+
 .PHONY: help
 help:
 	@echo "make uv        Install uv if it is not already installed"
@@ -11,6 +14,7 @@ help:
 	@echo "make lint      Check code style and common mistakes (ruff)"
 	@echo "make format    Auto-format code and fix lint issues (ruff)"
 	@echo "make typecheck Check types (ty)"
+	@echo "make vendor    Download pinned front-end libraries into static/vendor"
 
 .PHONY: uv
 uv:
@@ -44,3 +48,8 @@ format:
 .PHONY: typecheck
 typecheck:
 	$(UV) run ty check
+
+.PHONY: vendor
+vendor:
+	mkdir -p $(VENDOR_DIR)/htmx
+	curl -fsSL https://cdn.jsdelivr.net/npm/htmx.org@$(HTMX_VERSION)/dist/htmx.min.js -o $(VENDOR_DIR)/htmx/htmx.min.js
