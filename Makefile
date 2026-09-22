@@ -55,3 +55,15 @@ vendor:
 	mkdir -p $(VENDOR_DIR)/htmx $(VENDOR_DIR)/alpinejs
 	curl -fsSL https://cdn.jsdelivr.net/npm/htmx.org@$(HTMX_VERSION)/dist/htmx.min.js -o $(VENDOR_DIR)/htmx/htmx.min.js
 	curl -fsSL https://cdn.jsdelivr.net/npm/@alpinejs/csp@$(ALPINE_VERSION)/dist/cdn.min.js -o $(VENDOR_DIR)/alpinejs/alpine.min.js
+
+.PHONY: init_db
+init_db:
+	$(FLASK) db init
+
+.PHONY: migrate
+migrate:
+	$(FLASK) db migrate
+
+.PHONY: upgrade_db
+upgrade_db:
+	$(FLASK) db upgrade
