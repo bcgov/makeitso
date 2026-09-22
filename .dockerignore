@@ -1,7 +1,11 @@
 # no python venv
 .venv
 
+# non-app folders
 helm
+.github
+
+# files
 *.env
 .env.*
 .gitignore
