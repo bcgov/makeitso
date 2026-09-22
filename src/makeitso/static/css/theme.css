@@ -1,0 +1,33 @@
+:root {
+  --bc-primary-blue: #003366;
+  --bc-bg-blue: #38598a;
+  --bc-link-blue: #1a5a96;
+  --bc-text: #313132;
+  --bc-yellow: #fcba19;
+  --bc-bg-grey: #f2f2f2;
+  --bc-red: #d8292f;
+  --bc-green: #2e8540;
+
+  --bs-body-color: var(--bc-text);
+  --bs-link-color-rgb: 26, 90, 150;
+  --bs-link-hover-color-rgb: 0, 51, 102;
+  --bs-primary-rgb: 0, 51, 102;
+  --bs-danger-rgb: 216, 41, 47;
+  --bs-success-rgb: 46, 133, 64;
+  --bs-warning-rgb: 252, 186, 25;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--bc-primary-blue);
+  --bs-btn-border-color: var(--bc-primary-blue);
+  --bs-btn-hover-bg: var(--bc-bg-blue);
+  --bs-btn-hover-border-color: var(--bc-bg-blue);
+  --bs-btn-active-bg: var(--bc-bg-blue);
+  --bs-btn-active-border-color: var(--bc-bg-blue);
+  --bs-btn-disabled-bg: var(--bc-primary-blue);
+  --bs-btn-disabled-border-color: var(--bc-primary-blue);
+}
+
+.bc-header {
+  border-bottom: 2px solid var(--bc-yellow);
+}

@@ -4,10 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}makeitso{% endblock %}</title>
+  {{ bootstrap.load_css() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
 </head>
 <body>
-  <main>
+  <nav class="navbar bg-primary bc-header" data-bs-theme="dark">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('main.index') }}">makeitso</a>
+    </div>
+  </nav>
+
+  <main class="container py-4">
     {% block content %}{% endblock %}
   </main>
+
+  {{ bootstrap.load_js() }}
 </body>
 </html>
