@@ -1,0 +1,16 @@
+# Main workflow to orchestrate all other workflows
+name: main workflow
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yaml

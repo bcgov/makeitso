@@ -1,0 +1,57 @@
+name: Build makeitso docker image
+
+on:
+  workflow_call:
+    inputs:
+      docker-image-tag:
+        description: "Tag for the Docker image"
+        required: false
+        type: string
+        default: "latest"
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Extract metadata for docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/bcgov/makeitso
+          tags: |
+            type=sha,format=long,prefix=
+            type=ref,event=pr
+            ${{ inputs.docker-image-tag }}
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache docker layers
+        uses: actions/cache@v6
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-makeitso-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-makeitso
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          file: Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
