@@ -47,5 +47,6 @@ USER nonroot
 # Use `/app` as the working directory
 WORKDIR /app
 
+EXPOSE 8000
 # Run the FastAPI application by default
-CMD ["fastapi", "run", "--host", "0.0.0.0", "app/makeitso"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "makeitso:create_app()"]
