@@ -1,4 +1,5 @@
 # Main workflow to orchestrate all other workflows
+name: main workflow
 
 on:
   push:
