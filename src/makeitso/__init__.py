@@ -28,3 +28,5 @@ def create_app() -> Flask:
     from makeitso.stacks import bp as stacks_bp
 
     app.register_blueprint(main_bp)
+
+    return app
