@@ -1,0 +1,8 @@
+# no python venv
+.venv
+
+helm
+*.env
+.env.*
+.gitignore
+Makefile
