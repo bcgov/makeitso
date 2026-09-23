@@ -6,7 +6,6 @@ from makeitso.extensions import bootstrap, db, migrate, oauth, rq
 
 
 def create_app() -> Flask:
-    load_dotenv()
     app = Flask(__name__)
     app.config.from_object(Config)
 

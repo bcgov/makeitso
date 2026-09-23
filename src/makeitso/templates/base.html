@@ -26,7 +26,11 @@
   </nav>
 
   <main class="container py-4">
-    {% block content %}{% endblock %}
+    {% if session.user %}
+      {% block content %}{% endblock %}
+    {% else %}
+      Please login first.
+    {% endif %}
   </main>
 
   {{ bootstrap.load_js() }}
