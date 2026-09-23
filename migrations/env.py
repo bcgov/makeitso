@@ -4,6 +4,7 @@ from logging.config import fileConfig
 from flask import current_app
 
 from alembic import context
+from alembic.script import ScriptDirectory
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -85,10 +86,20 @@ def run_migrations_online():
     # reference: http://alembic.zzzcomputing.com/en/latest/cookbook.html
     def process_revision_directives(context, revision, directives):
         if getattr(config.cmd_opts, 'autogenerate', False):
-            script = directives[0]
-            if script.upgrade_ops.is_empty():
-                directives[:] = []
-                logger.info('No changes in schema detected.')
+            # extract Migration
+            migration_script = directives[0]
+            # extract current head revision
+            head_revision = ScriptDirectory.from_config(context.config).get_current_head()
+            
+            if head_revision is None:
+                # edge case with first migration
+                new_rev_id = 1
+            else:
+                # default branch with incrementation
+                last_rev_id = int(head_revision.lstrip('0'))
+                new_rev_id = last_rev_id + 1
+            # fill zeros up to 4 digits: 1 -> 0001
+            migration_script.rev_id = '{0:04}'.format(new_rev_id)
 
     conf_args = current_app.extensions['migrate'].configure_args
     if conf_args.get("process_revision_directives") is None:
@@ -105,7 +116,6 @@ def run_migrations_online():
 
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()

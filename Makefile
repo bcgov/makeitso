@@ -60,10 +60,22 @@ vendor:
 init_db:
 	$(FLASK) db init
 
+# Named migration: ARGS='-m "named-migration"'
 .PHONY: migrate
 migrate:
-	$(FLASK) db migrate
+	@if [ -z "$(ARGS)" ]; then \
+		echo "Error: ARGS is empty. Please name your migration."; \
+		exit 1; \
+	else \
+		$(FLASK) db migrate $(ARGS); \
+	fi
 
 .PHONY: upgrade_db
 upgrade_db:
-	$(FLASK) db upgrade
+	$(FLASK) db upgrade $(ARGS)
+
+# ARGS='<revision_id>' - downgrade to specific revision
+# ARGS='-3' - downgrade the last 3 revisions
+.PHONY: downgrade_db
+downgrade_db:
+	$(FLASK) db downgrade $(ARGS)
