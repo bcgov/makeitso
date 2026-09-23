@@ -31,3 +31,7 @@
 .bc-header {
   border-bottom: 2px solid var(--bc-yellow);
 }
+
+[x-cloak] {
+  display: none !important;
+}
