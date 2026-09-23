@@ -1,19 +1,5 @@
 {% extends "base.html" %}
 
-{% block user_session %}
-
-{% if session.get('user') %}
-  <div class="navbar-brand">
-    <img src="{{ session.get('user').get('avatar_url') }}" alt="User Avatar" class="rounded-circle" width="30" height="30">
-    {{ session.get('user').get('login') }}@github
-    <a class="btn btn-primary border-light ms-3" href="{{ url_for('auth.logout') }}">Logout</a>
-  </div>
-{% else %}
-  <a class="btn btn-primary border-light" href="{{ url_for('auth.login') }}">Login</a>
-{% endif %}
-
-{% endblock %}
-
 
 {% block content %}
 <h1>makeitso</h1>

@@ -7,6 +7,8 @@ from rq.job import Job
 from makeitso.extensions import rq
 from makeitso.main.jobs import add_numbers
 
+from makeitso.auth.decorators import requires_auth
+
 # A blueprint groups related routes; create_app() registers it on the app.
 bp = Blueprint("main", __name__)
 
@@ -17,6 +19,7 @@ def index():
 
 
 @bp.get("/partials/server-time")
+@requires_auth
 def server_time():
     return render_template("main/_server_time.html", now=datetime.now(UTC))
 

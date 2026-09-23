@@ -13,7 +13,15 @@
   <nav class="navbar bg-primary bc-header" data-bs-theme="dark">
     <div class="container">
       <a class="navbar-brand" href="{{ url_for('main.index') }}">makeitso</a>
-      {% block user_session %}{% endblock %}
+      {% if session.user %}
+        <div class="navbar-brand">
+          <img src="{{ session.user.avatar_url }}" alt="User Avatar" class="rounded-circle" width="30" height="30">
+          {{ session.user.login }}@github
+          <a class="btn btn-primary border-light ms-3" href="{{ url_for('auth.logout') }}">Logout</a>
+        </div>
+      {% else %}
+        <a class="btn btn-primary border-light" href="{{ url_for('auth.login') }}">Login</a>
+      {% endif %}
     </div>
   </nav>
 

@@ -12,13 +12,15 @@ def handle_oauth_error(error):
     return render_template("main/error.html", error_message=error.description)
 
 
-@bp.route("/callback")
-def callback():
+@bp.route("/authorize")
+def authorize():
     """
     Callback redirect for OAuth flow
     """
 
     token = oauth.github.authorize_access_token()
+    session["token"] = token
+
     response = oauth.github.get("user")
     response.raise_for_status()
 
@@ -31,7 +33,7 @@ def callback():
 @bp.route("/login")
 def login():
     return oauth.github.authorize_redirect(
-        redirect_uri=url_for("auth.callback", _external=True)
+        redirect_uri=url_for("auth.authorize", _external=True)
     )
 
 
