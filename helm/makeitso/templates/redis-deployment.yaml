@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "makeitso.fullname" . }}-redis
+  labels:
+{{ include "makeitso.labels" . | indent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+{{- include "makeitso.selectorLabels" . | nindent 6 }}
+      component: redis
+  template:
+    metadata:
+      labels:
+{{- include "makeitso.selectorLabels" . | nindent 8 }}
+        component: redis
+    spec:
+      containers:
+        - image: redis
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - --raw
+                - incr
+                - ping
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: makeitso-redis
+          volumeMounts:
+            - mountPath: /data
+              name: {{ include "makeitso.fullname" . }}-redis
+      restartPolicy: Always
+      volumes:
+        - name: {{ include "makeitso.fullname" . }}-redis
+          persistentVolumeClaim:
+            claimName: {{ include "makeitso.fullname" . }}-redis

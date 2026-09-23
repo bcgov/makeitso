@@ -5,3 +5,8 @@ description: A deployment orchestrator for GitHub-hosted projects.
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+dependencies:
+  - name: cas-postgres-cluster
+    alias: db
+    version: "1.2.0"
+    repository: https://bcgov.github.io/cas-postgres/

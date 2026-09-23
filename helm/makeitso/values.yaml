@@ -1,0 +1,28 @@
+app:
+  image: "ghcr.io/bcgov/makeitso"
+  imageTag: "latest"
+  imagePullPolicy: Always
+  replicas: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+db:
+  postgresCluster:
+    storageSize: 3Gi
+    postgres:
+      replicaCount: 2
+    pgbouncer:
+      replicaCount: 2
+    users:
+      - name: postgres
+        databases:
+          - makeitso
+      - name: makeitso
+        databases:
+          - makeitso
+
+route:
+  host: "makeitso.apps.silver.devops.gov.bc.ca"
