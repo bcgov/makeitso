@@ -11,6 +11,9 @@ class Config:
     BOOTSTRAP_SERVE_LOCAL = True
     REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
+    GITHUB_CLIENT_ID = os.environ.get("GITHUB_APP_CLIENT_ID")
+    GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_APP_CLIENT_SECRET")
+
     DB_USER = os.environ.get("DB_USER", "postgres")
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USER}:{urllib.parse.quote(str(os.environ.get('DB_PASSWORD')))}"

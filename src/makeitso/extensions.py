@@ -1,5 +1,3 @@
-import os
-
 from authlib.integrations.flask_client import OAuth
 from flask_bootstrap import Bootstrap5
 from flask_migrate import Migrate
@@ -13,10 +11,9 @@ migrate = Migrate()
 rq = RedisQueue()
 
 oauth = OAuth()
+# Client ID and secret are read from app.config (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
 oauth.register(
     "github",
-    client_id=os.environ.get("GITHUB_APP_CLIENT_ID"),
-    client_secret=os.environ.get("GITHUB_APP_CLIENT_SECRET"),
     access_token_url="https://github.com/login/oauth/access_token",
     access_token_params=None,
     authorize_url="https://github.com/login/oauth/authorize",
