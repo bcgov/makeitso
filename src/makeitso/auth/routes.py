@@ -1,9 +1,15 @@
+from authlib.integrations.base_client import OAuthError
 from authlib.integrations.flask_client import OAuth
-from flask import Blueprint, redirect, session, url_for
+from flask import Blueprint, redirect, render_template, session, url_for
 
 from makeitso.extensions import oauth
 
 bp = Blueprint("auth", __name__)
+
+
+@bp.errorhandler(OAuthError)
+def handle_oauth_error(error):
+    return render_template("main/error.html", error_message=error.description)
 
 
 @bp.route("/callback")
