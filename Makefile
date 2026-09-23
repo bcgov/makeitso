@@ -1,10 +1,11 @@
 # Fall back to the installer's location so uv works right after `make uv`
 UV := $(or $(shell command -v uv 2>/dev/null),$(HOME)/.local/bin/uv)
 FLASK := $(UV) run flask --app makeitso
-
+DB_NAME := mis
 HTMX_VERSION := 2.0.11
 ALPINE_VERSION := 3.17.4
 VENDOR_DIR := src/makeitso/static/vendor
+PSQL := psql
 
 .PHONY: help
 help:
@@ -50,8 +51,39 @@ format:
 typecheck:
 	$(UV) run ty check
 
+.PHONY: create_db
+create_db: ## Ensure that the $(DB_NAME) database exists
+create_db:
+	@$(PSQL) -d postgres -tc "SELECT count(*) FROM pg_database WHERE datname = '$(DB_NAME)'" | \
+		grep -q 1 || \
+		$(PSQL) -d postgres -c "CREATE DATABASE $(DB_NAME)";
+
 .PHONY: vendor
 vendor:
 	mkdir -p $(VENDOR_DIR)/htmx $(VENDOR_DIR)/alpinejs
 	curl -fsSL https://cdn.jsdelivr.net/npm/htmx.org@$(HTMX_VERSION)/dist/htmx.min.js -o $(VENDOR_DIR)/htmx/htmx.min.js
 	curl -fsSL https://cdn.jsdelivr.net/npm/@alpinejs/csp@$(ALPINE_VERSION)/dist/cdn.min.js -o $(VENDOR_DIR)/alpinejs/alpine.min.js
+
+.PHONY: init_db
+init_db:
+	$(FLASK) db init
+
+# Named migration: ARGS='-m "named-migration"'
+.PHONY: migrate
+migrate:
+	@if [ -z "$(ARGS)" ]; then \
+		echo "Error: ARGS is empty. Please name your migration."; \
+		exit 1; \
+	else \
+		$(FLASK) db migrate $(ARGS); \
+	fi
+
+.PHONY: upgrade_db
+upgrade_db:
+	$(FLASK) db upgrade $(ARGS)
+
+# ARGS='<revision_id>' - downgrade to specific revision
+# ARGS='-3' - downgrade the last 3 revisions
+.PHONY: downgrade_db
+downgrade_db:
+	$(FLASK) db downgrade $(ARGS)
