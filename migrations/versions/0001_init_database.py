@@ -79,4 +79,6 @@ def downgrade():
     op.drop_table('stack_env_var')
     op.drop_table('commit')
     op.drop_table('stack')
+    ### Manual drop of enum type
+    op.execute('drop type deploystatus')
     # ### end Alembic commands ###
