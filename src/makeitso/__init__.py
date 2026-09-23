@@ -1,12 +1,21 @@
+import os
+
 from flask import Flask
 
-from makeitso.config import Config
+from makeitso.config import configs
 from makeitso.extensions import bootstrap, db, migrate, oauth, rq
 
 
-def create_app() -> Flask:
+def create_app(config_name: str | None = None) -> Flask:
+    config_name = config_name or os.environ.get("MAKEITSO_ENV")
+    if config_name not in configs:
+        raise RuntimeError(f"MAKEITSO_ENV must be one of {list(configs)}, got {config_name!r}")
+
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(configs[config_name])
+
+    if not app.config["SECRET_KEY"]:
+        raise RuntimeError(f"SECRET_KEY is not set (MAKEITSO_ENV={config_name})")
 
     bootstrap.init_app(app)
     db.init_app(app)
