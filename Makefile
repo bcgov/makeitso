@@ -3,6 +3,7 @@ UV := $(or $(shell command -v uv 2>/dev/null),$(HOME)/.local/bin/uv)
 FLASK := $(UV) run flask --app makeitso
 
 HTMX_VERSION := 2.0.11
+ALPINE_VERSION := 3.17.4
 VENDOR_DIR := src/makeitso/static/vendor
 
 .PHONY: help
@@ -51,5 +52,6 @@ typecheck:
 
 .PHONY: vendor
 vendor:
-	mkdir -p $(VENDOR_DIR)/htmx
+	mkdir -p $(VENDOR_DIR)/htmx $(VENDOR_DIR)/alpinejs
 	curl -fsSL https://cdn.jsdelivr.net/npm/htmx.org@$(HTMX_VERSION)/dist/htmx.min.js -o $(VENDOR_DIR)/htmx/htmx.min.js
+	curl -fsSL https://cdn.jsdelivr.net/npm/@alpinejs/csp@$(ALPINE_VERSION)/dist/cdn.min.js -o $(VENDOR_DIR)/alpinejs/alpine.min.js
