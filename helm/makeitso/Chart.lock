@@ -1,0 +1,6 @@
+dependencies:
+- name: cas-postgres-cluster
+  repository: https://bcgov.github.io/cas-postgres/
+  version: 1.2.0
+digest: sha256:9b5c27dba874e709b9757efed16de7d89f72981912e04430a1fe167ae4100823
+generated: "2026-09-22T20:30:59.0926-07:00"

@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: {{ template "makeitso.fullname" . }}-app
-          image: {{ .Values.app.image }}
+          image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
           imagePullPolicy: {{ .Values.app.imagePullPolicy }}
           env:
             - name: DATABASE_URL

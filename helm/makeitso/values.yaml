@@ -1,5 +1,6 @@
 app:
-  image: "makeitso:latest"
+  image: "ghcr.io/bcgov/makeitso"
+  imageTag: "latest"
   imagePullPolicy: Always
   replicas: 1
 

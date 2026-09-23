@@ -1,7 +1,7 @@
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: {{ include "makeitso.fullname" . }}-internal-instance
+  name: {{ include "makeitso.fullname" . }}-internal
   labels: {{ include "makeitso.labels" . | nindent 4 }}
 spec:
   podSelector:
