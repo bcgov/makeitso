@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from flask import Flask
 
 from makeitso.config import Config
-from makeitso.extensions import bootstrap, db, migrate, rq
+from makeitso.extensions import bootstrap, db, migrate, oauth, rq
 
 
 def create_app() -> Flask:
@@ -14,6 +14,7 @@ def create_app() -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
     rq.init_app(app)
+    oauth.init_app(app)
 
     from makeitso import models  # noqa: F401  (registers the models with SQLAlchemy)
     from makeitso.auth import bp as auth_bp
@@ -22,7 +23,7 @@ def create_app() -> Flask:
     from makeitso.stacks import bp as stacks_bp
 
     app.register_blueprint(main_bp)
-    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(auth_bp, url_prefix="/")
     app.register_blueprint(stacks_bp, url_prefix="/stacks")
     app.register_blueprint(deploys_bp, url_prefix="/deploys")
 

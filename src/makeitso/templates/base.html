@@ -13,6 +13,7 @@
   <nav class="navbar bg-primary bc-header" data-bs-theme="dark">
     <div class="container">
       <a class="navbar-brand" href="{{ url_for('main.index') }}">makeitso</a>
+      {% block user_session %}{% endblock %}
     </div>
   </nav>
 
