@@ -4,8 +4,8 @@ from flask import Blueprint, render_template
 from redis.exceptions import ConnectionError as RedisConnectionError
 from rq.job import Job
 
+from makeitso.extensions import rq
 from makeitso.main.jobs import add_numbers
-from makeitso.redis_queue import get_queue
 
 # A blueprint groups related routes; create_app() registers it on the app.
 bp = Blueprint("main", __name__)
@@ -25,7 +25,7 @@ def server_time():
 @bp.post("/partials/example-job")
 def enqueue_example_job():
     try:
-        job = get_queue().enqueue(add_numbers, 2, 3)
+        job = rq.queue.enqueue(add_numbers, 2, 3)
     except RedisConnectionError:
         return render_template("main/_job_status.html", job=None)
     return render_template("main/_job_status.html", job=job)
@@ -35,5 +35,5 @@ def enqueue_example_job():
 @bp.get("/partials/example-job/<job_id>")
 def example_job_status(job_id: str):
     # Load the job's latest state from Redis by its ID.
-    job = Job.fetch(job_id, connection=get_queue().connection)
+    job = Job.fetch(job_id, connection=rq.queue.connection)
     return render_template("main/_job_status.html", job=job)

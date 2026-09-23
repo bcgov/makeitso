@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 
-from makeitso import db
+from makeitso.extensions import db
 
 # Imported for type checkers only; importing at runtime would be circular
 if TYPE_CHECKING:

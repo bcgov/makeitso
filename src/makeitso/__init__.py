@@ -1,15 +1,8 @@
 from dotenv import load_dotenv
 from flask import Flask
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
 
-from config import Config
-from makeitso import redis_queue
 from makeitso.config import Config
-from makeitso.extensions import bootstrap
-
-db = SQLAlchemy()
-migrate = Migrate()
+from makeitso.extensions import bootstrap, db, migrate, rq
 
 
 def create_app() -> Flask:
@@ -18,10 +11,9 @@ def create_app() -> Flask:
     app.config.from_object(Config)
 
     bootstrap.init_app(app)
-    app.config.from_object(Config)
     db.init_app(app)
     migrate.init_app(app, db)
-    redis_queue.init_app(app)
+    rq.init_app(app)
 
     from makeitso import models  # noqa: F401  (registers the models with SQLAlchemy)
     from makeitso.auth import bp as auth_bp

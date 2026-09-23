@@ -4,7 +4,7 @@ from datetime import datetime
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 
-from makeitso import db
+from makeitso.extensions import db
 
 
 class DeployStatus(enum.Enum):
