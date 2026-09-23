@@ -1,7 +1,6 @@
 import os
 
 from authlib.integrations.flask_client import OAuth
-from flask import current_app
 from flask_bootstrap import Bootstrap5
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
