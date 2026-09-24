@@ -12,6 +12,11 @@ from makeitso.main.jobs import add_numbers
 bp = Blueprint("main", __name__)
 
 
+@bp.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+
 @bp.get("/")
 def index():
     return render_template("main/index.html")

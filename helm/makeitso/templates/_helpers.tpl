@@ -60,3 +60,33 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Environment shared by the app
+*/}}
+{{- define "makeitso.appEnv" -}}
+- name: MAKEITSO_ENV
+  value: prod
+- name: DATABASE_URL
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-postgres
+      key: uri
+- name: REDIS_URL
+  value: redis://{{ include "makeitso.fullname" . }}-redis:6379/0
+- name: SECRET_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.app.secretName }}
+      key: SECRET_KEY
+- name: GITHUB_APP_CLIENT_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.app.secretName }}
+      key: GITHUB_APP_CLIENT_ID
+- name: GITHUB_APP_CLIENT_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.app.secretName }}
+      key: GITHUB_APP_CLIENT_SECRET
+{{- end }}
