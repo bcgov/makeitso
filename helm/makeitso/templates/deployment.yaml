@@ -45,7 +45,7 @@ spec:
             requests:
               cpu: 100m
               memory: 1Gi
-        - name: {{ template "makeitso.fullname" . }}-app
+        - name: {{ template "makeitso.fullname" . }}-worker
           image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
           imagePullPolicy: {{ .Values.app.imagePullPolicy }}
           env:
