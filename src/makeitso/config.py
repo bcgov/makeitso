@@ -44,6 +44,7 @@ class TestingConfig(Config):
     TESTING = True
     SECRET_KEY = "test"
 
+
 class LocalConfig(Config):
     SECRET_KEY = os.environ.get("SECRET_KEY") or "local"
     # Local dev runs on plain http

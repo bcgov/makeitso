@@ -32,7 +32,9 @@ def authorize():
 @bp.route("/login")
 def login():
     scheme = "https" if current_app.config["SESSION_COOKIE_SECURE"] else "http"
-    return oauth.github.authorize_redirect(redirect_uri=url_for("auth.authorize", _external=True, _scheme=scheme))
+    return oauth.github.authorize_redirect(
+        redirect_uri=url_for("auth.authorize", _external=True, _scheme=scheme)
+    )
 
 
 @bp.route("/logout")

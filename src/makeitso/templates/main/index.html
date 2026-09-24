@@ -7,34 +7,6 @@
 
 {% if session.user %}
 
-<div class="card">
-  <div class="card-body">
-    <h2 class="h5 card-title">Bootstrap</h2>
-    <button type="button" class="btn btn-primary">Primary button</button>
-  </div>
-</div>
-
-<div class="card mt-4">
-  <div class="card-body">
-    <h2 class="h5 card-title">HTMX</h2>
-    <button type="button" class="btn btn-primary"
-            hx-get="{{ url_for('main.server_time') }}" hx-target="#server-time">
-      Get server time
-    </button>
-    <div id="server-time" class="mt-3"></div>
-  </div>
-</div>
-
-<div class="card mt-4" x-data="{ open: false }">
-  <div class="card-body">
-    <h2 class="h5 card-title">Alpine.js</h2>
-    <button type="button" class="btn btn-primary" @click="open = !open" x-text="open ? 'Hide' : 'Show'">
-      Show
-    </button>
-    <p class="mt-3" x-show="open" x-cloak>Hello from Alpine!</p>
-  </div>
-</div>
-
 <div class="card mt-4">
   <div class="card-body">
     <h2 class="h5 card-title">Background job (RQ)</h2>
