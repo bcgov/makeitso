@@ -48,5 +48,5 @@ USER nonroot
 WORKDIR /app
 
 EXPOSE 8000
-# Run the FastAPI application by default
+# Run the Flask app with gunicorn by default
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "makeitso:create_app()"]
