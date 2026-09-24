@@ -1,5 +1,3 @@
-from datetime import UTC, datetime
-
 from flask import Blueprint, render_template
 from redis.exceptions import ConnectionError as RedisConnectionError
 from rq.job import Job
@@ -21,12 +19,6 @@ def healthz():
 @bp.get("/")
 def index():
     return render_template("main/index.html")
-
-
-@bp.get("/partials/server-time")
-@requires_auth
-def server_time():
-    return render_template("main/_server_time.html", now=datetime.now(UTC))
 
 
 # Queues the example job and returns its status fragment right away
