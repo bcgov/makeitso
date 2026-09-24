@@ -31,6 +31,16 @@ spec:
                   key: uri
             - name: REDIS_SERVER_HOST
               value: {{ include "makeitso.fullname" . }}-redis.{{ .Namespace }}.svc.cluster.local
+            - name: GITHUB_APP_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: makeitso-github-app-secret
+                  key: clientId
+            - name: GITHUB_APP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: makeitso-github-app-secret
+                  key: clientSecret
           resources:
             requests:
               cpu: 100m
