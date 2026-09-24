@@ -66,19 +66,19 @@ Environment shared by the app
 */}}
 {{- define "makeitso.appEnv" -}}
 - name: MAKEITSO_ENV
-  value: prod
+  value: {{ .Values.app.env | default "prod" }}
 - name: DATABASE_URL
   valueFrom:
     secretKeyRef:
       name: makeitso-db-pguser-postgres
       key: uri
 - name: REDIS_URL
-  value: redis://{{ include "makeitso.fullname" . }}-redis:6379/0
+  value: redis://{{ include "makeitso.fullname" . }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379
 - name: SECRET_KEY
   valueFrom:
     secretKeyRef:
-      name: {{ .Values.app.secretName }}
-      key: SECRET_KEY
+      name: {{ include "makeitso.fullname" . }}-secret
+      key: appSecretKey
 - name: GITHUB_APP_CLIENT_ID
   valueFrom:
     secretKeyRef:

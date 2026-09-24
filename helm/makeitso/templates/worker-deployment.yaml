@@ -26,6 +26,6 @@ spec:
             {{- include "makeitso.appEnv" . | nindent 12 }}
           resources:
             requests:
-              cpu: 50m
-              memory: 256Mi
+              cpu: 100m
+              memory: 500Mi
       restartPolicy: Always

@@ -3,7 +3,6 @@ app:
   imageTag: "latest"
   imagePullPolicy: Always
   replicas: 1
-  secretName: makeitso-app
   env: prod
 
 worker:
