@@ -4,6 +4,7 @@ from flask import Blueprint, render_template
 from redis.exceptions import ConnectionError as RedisConnectionError
 from rq.job import Job
 
+from makeitso.auth.decorators import requires_auth
 from makeitso.extensions import rq
 from makeitso.main.jobs import add_numbers
 
@@ -17,6 +18,7 @@ def index():
 
 
 @bp.get("/partials/server-time")
+@requires_auth
 def server_time():
     return render_template("main/_server_time.html", now=datetime.now(UTC))
 

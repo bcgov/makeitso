@@ -11,6 +11,7 @@ dist/
 # Secrets and local environment (see .env.example)
 .env
 .env.*
+!.env.example
 .envrc
 
 # Flask instance folder (local config, uploads)
