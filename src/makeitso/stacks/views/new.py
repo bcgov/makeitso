@@ -31,5 +31,4 @@ class NewStackView(MethodView):
 
             return redirect("/")
 
-        print("noooooo")
         return render_template("stacks/new.html", title="New Stack", form=self.form)
