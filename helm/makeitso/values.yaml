@@ -3,8 +3,10 @@ app:
   imageTag: "latest"
   imagePullPolicy: Always
   replicas: 1
-
   env: prod
+
+worker:
+  replicas: 1
 
 service:
   type: ClusterIP

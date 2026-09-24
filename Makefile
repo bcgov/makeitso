@@ -1,11 +1,12 @@
 # Fall back to the installer's location so uv works right after `make uv`
 UV := $(or $(shell command -v uv 2>/dev/null),$(HOME)/.local/bin/uv)
 FLASK := $(UV) run flask --app makeitso
+PSQL := psql
 DB_NAME := mis
+
 HTMX_VERSION := 2.0.11
 ALPINE_VERSION := 3.17.4
 VENDOR_DIR := src/makeitso/static/vendor
-PSQL := psql
 
 .PHONY: help
 help:
@@ -16,6 +17,11 @@ help:
 	@echo "make redis-install  Install Redis with Homebrew if it is not already installed"
 	@echo "make redis          Run a local Redis server (installs it first if needed)"
 	@echo "make worker         Run a background job worker (RQ)"
+	@echo "make create_db      Create the $(DB_NAME) database if it does not exist"
+	@echo "make init_db        Initialise the migrations folder (already done in this repo)"
+	@echo "make migrate        Generate a migration: make migrate ARGS='-m \"message\"'"
+	@echo "make upgrade_db     Apply pending migrations"
+	@echo "make downgrade_db   Roll back migrations: ARGS='<revision>' or ARGS='-1'"
 	@echo "make lint           Check code style and common mistakes (ruff)"
 	@echo "make format         Auto-format code and fix lint issues (ruff)"
 	@echo "make typecheck      Check types (ty)"
@@ -63,32 +69,11 @@ redis: redis-install
 worker:
 	$(FLASK) worker
 
-.PHONY: lint
-lint:
-	$(UV) run ruff check .
-	$(UV) run ruff format --check .
-
-.PHONY: format
-format:
-	$(UV) run ruff check --fix .
-	$(UV) run ruff format .
-
-.PHONY: typecheck
-typecheck:
-	$(UV) run ty check
-
 .PHONY: create_db
-create_db: ## Ensure that the $(DB_NAME) database exists
 create_db:
 	@$(PSQL) -d postgres -tc "SELECT count(*) FROM pg_database WHERE datname = '$(DB_NAME)'" | \
 		grep -q 1 || \
-		$(PSQL) -d postgres -c "CREATE DATABASE $(DB_NAME)";
-
-.PHONY: vendor
-vendor:
-	mkdir -p $(VENDOR_DIR)/htmx $(VENDOR_DIR)/alpinejs
-	curl -fsSL https://cdn.jsdelivr.net/npm/htmx.org@$(HTMX_VERSION)/dist/htmx.min.js -o $(VENDOR_DIR)/htmx/htmx.min.js
-	curl -fsSL https://cdn.jsdelivr.net/npm/@alpinejs/csp@$(ALPINE_VERSION)/dist/cdn.min.js -o $(VENDOR_DIR)/alpinejs/alpine.min.js
+		$(PSQL) -d postgres -c "CREATE DATABASE $(DB_NAME)"
 
 .PHONY: init_db
 init_db:
@@ -113,3 +98,23 @@ upgrade_db:
 .PHONY: downgrade_db
 downgrade_db:
 	$(FLASK) db downgrade $(ARGS)
+
+.PHONY: lint
+lint:
+	$(UV) run ruff check .
+	$(UV) run ruff format --check .
+
+.PHONY: format
+format:
+	$(UV) run ruff check --fix .
+	$(UV) run ruff format .
+
+.PHONY: typecheck
+typecheck:
+	$(UV) run ty check
+
+.PHONY: vendor
+vendor:
+	mkdir -p $(VENDOR_DIR)/htmx $(VENDOR_DIR)/alpinejs
+	curl -fsSL https://cdn.jsdelivr.net/npm/htmx.org@$(HTMX_VERSION)/dist/htmx.min.js -o $(VENDOR_DIR)/htmx/htmx.min.js
+	curl -fsSL https://cdn.jsdelivr.net/npm/@alpinejs/csp@$(ALPINE_VERSION)/dist/cdn.min.js -o $(VENDOR_DIR)/alpinejs/alpine.min.js

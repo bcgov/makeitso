@@ -17,7 +17,7 @@ spec:
         component: redis
     spec:
       containers:
-        - image: redis
+        - image: redis:8
           livenessProbe:
             exec:
               command:

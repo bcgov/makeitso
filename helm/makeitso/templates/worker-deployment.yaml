@@ -1,43 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "makeitso.fullname" . }}-app
+  name: {{ include "makeitso.fullname" . }}-worker
   labels:
-    component: app
+    component: worker
 {{- include "makeitso.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.app.replicas }}
+  replicas: {{ .Values.worker.replicas }}
   selector:
     matchLabels:
       {{- include "makeitso.selectorLabels" . | nindent 6 }}
-      component: app
-  strategy:
-    type: RollingUpdate
+      component: worker
   template:
     metadata:
       labels:
 {{- include "makeitso.selectorLabels" . | nindent 8 }}
-        component: app
+        component: worker
     spec:
       containers:
-        - name: {{ template "makeitso.fullname" . }}-app
+        - name: {{ template "makeitso.fullname" . }}-worker
           image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
           imagePullPolicy: {{ .Values.app.imagePullPolicy }}
+          command: ["flask", "--app", "makeitso", "worker"]
           env:
             {{- include "makeitso.appEnv" . | nindent 12 }}
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 8000
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 20
           resources:
             requests:
               cpu: 100m
-              memory: 1Gi
+              memory: 500Mi
       restartPolicy: Always
