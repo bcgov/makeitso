@@ -1,5 +1,5 @@
 from authlib.integrations.base_client import OAuthError
-from flask import Blueprint, redirect, render_template, session, url_for
+from flask import Blueprint, current_app, redirect, render_template, session, url_for
 
 from makeitso.extensions import oauth
 
@@ -31,7 +31,8 @@ def authorize():
 
 @bp.route("/login")
 def login():
-    return oauth.github.authorize_redirect(redirect_uri=url_for("auth.authorize", _external=True))
+    scheme = "https" if current_app.config["SESSION_COOKIE_SECURE"] else "http"
+    return oauth.github.authorize_redirect(redirect_uri=url_for("auth.authorize", _external=True, _scheme=scheme))
 
 
 @bp.route("/logout")

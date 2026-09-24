@@ -38,12 +38,15 @@ class ProductionConfig(Config):
 class DevelopmentConfig(Config):
     SECRET_KEY = os.environ.get("SECRET_KEY") or "dev"
     # Local dev runs on plain http
-    SESSION_COOKIE_SECURE = False
 
 
 class TestingConfig(Config):
     TESTING = True
     SECRET_KEY = "test"
+
+class LocalConfig(Config):
+    SECRET_KEY = os.environ.get("SECRET_KEY") or "local"
+    # Local dev runs on plain http
     SESSION_COOKIE_SECURE = False
 
 
@@ -51,4 +54,5 @@ configs = {
     "prod": ProductionConfig,
     "dev": DevelopmentConfig,
     "test": TestingConfig,
+    "local": LocalConfig,
 }

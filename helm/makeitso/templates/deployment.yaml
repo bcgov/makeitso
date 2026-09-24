@@ -29,10 +29,50 @@ spec:
                 secretKeyRef:
                   name: makeitso-db-pguser-postgres
                   key: uri
-            - name: REDIS_SERVER_HOST
-              value: {{ include "makeitso.fullname" . }}-redis.{{ .Namespace }}.svc.cluster.local
+            - name: REDIS_HOST
+              value: redis://{{ include "makeitso.fullname" . }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379
+            - name: GITHUB_APP_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: makeitso-github-app-secret
+                  key: clientId
+            - name: GITHUB_APP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: makeitso-github-app-secret
+                  key: clientSecret
+            - name: MAKEITSO_ENV
+              value: {{ .Values.app.env | default "prod" }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "makeitso.fullname" . }}-secret
+                  key: appSecretKey
           resources:
             requests:
               cpu: 100m
               memory: 1Gi
+        - name: {{ template "makeitso.fullname" . }}-worker
+          image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
+          imagePullPolicy: {{ .Values.app.imagePullPolicy }}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: makeitso-db-pguser-postgres
+                  key: uri
+            - name: REDIS_URL
+              value: redis://{{ include "makeitso.fullname" . }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379
+            - name: MAKEITSO_ENV
+              value: {{ .Values.app.env | default "prod" }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "makeitso.fullname" . }}-secret
+                  key: appSecretKey
+          resources:
+            requests:
+              cpu: 100m
+              memory: 500Mi
+          command: ["flask", "--app", "makeitso", "worker"]
       restartPolicy: Always
