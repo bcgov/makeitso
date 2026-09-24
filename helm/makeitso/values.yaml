@@ -4,8 +4,10 @@ app:
   imagePullPolicy: Always
   replicas: 1
   secretName: makeitso-app
-
   env: prod
+
+worker:
+  replicas: 1
 
 service:
   type: ClusterIP
