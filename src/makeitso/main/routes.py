@@ -17,8 +17,8 @@ def healthz():
     return {"status": "ok"}
 
 
+# Public so logging out lands here instead of bouncing straight back through GitHub login
 @bp.get("/")
-@requires_auth
 def index():
     return render_template("main/index.html")
 
