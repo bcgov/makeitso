@@ -83,10 +83,10 @@ Environment shared by the app
   valueFrom:
     secretKeyRef:
       name: {{ .Values.app.secretName }}
-      key: GITHUB_APP_CLIENT_ID
+      key: clientId
 - name: GITHUB_APP_CLIENT_SECRET
   valueFrom:
     secretKeyRef:
       name: {{ .Values.app.secretName }}
-      key: GITHUB_APP_CLIENT_SECRET
+      key: clientSecret
 {{- end }}
