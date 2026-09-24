@@ -29,8 +29,8 @@ spec:
                 secretKeyRef:
                   name: makeitso-db-pguser-postgres
                   key: uri
-            - name: REDIS_SERVER_HOST
-              value: {{ include "makeitso.fullname" . }}-redis.{{ .Namespace }}.svc.cluster.local
+            - name: REDIS_HOST
+              value: redis://{{ include "makeitso.fullname" . }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379
             - name: GITHUB_APP_CLIENT_ID
               valueFrom:
                 secretKeyRef:
@@ -43,6 +43,11 @@ spec:
                   key: clientSecret
             - name: MAKEITSO_ENV
               value: {{ .Values.app.env | default "prod" }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "makeitso.fullname" . }}-secret
+                  key: appSecretKey
           resources:
             requests:
               cpu: 100m
@@ -56,13 +61,18 @@ spec:
                 secretKeyRef:
                   name: makeitso-db-pguser-postgres
                   key: uri
-            - name: REDIS_SERVER_HOST
-              value: {{ include "makeitso.fullname" . }}-redis.{{ .Namespace }}.svc.cluster.local
+            - name: REDIS_URL
+              value: redis://{{ include "makeitso.fullname" . }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379
             - name: MAKEITSO_ENV
               value: {{ .Values.app.env | default "prod" }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "makeitso.fullname" . }}-secret
+                  key: appSecretKey
           resources:
             requests:
               cpu: 100m
               memory: 500Mi
-          command: ["flask", "worker"]
+          command: ["flask", "--app", "makeitso", "worker"]
       restartPolicy: Always

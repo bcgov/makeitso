@@ -4,6 +4,8 @@ app:
   imagePullPolicy: Always
   replicas: 1
 
+  env: prod
+
 service:
   type: ClusterIP
   port: 80

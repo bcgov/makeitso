@@ -15,6 +15,6 @@ GIT_COMMIT=$(git rev-parse HEAD)
 
 helm upgrade -n "$CIIP_NAMESPACE_PREFIX-tools" \
   --install --atomic  \
-  --set app.imageTag="$GIT_COMMIT" \
+  --set app.imageTag="pr-13" \
   makeitso ./helm/makeitso
 
