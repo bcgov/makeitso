@@ -1,24 +1,19 @@
 from dotenv import load_dotenv
 from flask import Flask
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
 
-from config import Config
-from makeitso.extensions import bootstrap
-
-db = SQLAlchemy()
-migrate = Migrate()
+from makeitso.config import Config
+from makeitso.extensions import bootstrap, db, migrate, rq
 
 
 def create_app() -> Flask:
     load_dotenv()
     app = Flask(__name__)
-    app.config["BOOTSTRAP_SERVE_LOCAL"] = True
+    app.config.from_object(Config)
 
     bootstrap.init_app(app)
-    app.config.from_object(Config)
     db.init_app(app)
     migrate.init_app(app, db)
+    rq.init_app(app)
 
     from makeitso import models  # noqa: F401  (registers the models with SQLAlchemy)
     from makeitso.auth import bp as auth_bp

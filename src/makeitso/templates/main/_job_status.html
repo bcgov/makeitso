@@ -1,0 +1,13 @@
+{# Status of the example job. While it's running, this fragment re-fetches itself every second. #}
+{% if job is none %}
+  <span class="badge text-bg-danger">Redis is not reachable. Run <code>make redis</code>.</span>
+{% elif job.is_finished %}
+  <span class="badge text-bg-success">Finished, result: {{ job.return_value() }}</span>
+{% elif job.is_failed %}
+  <span class="badge text-bg-danger">Failed</span>
+{% else %}
+  {# Not done yet: replace this div with a fresh status every second; polling stops once it's finished. #}
+  <div hx-get="{{ url_for('main.example_job_status', job_id=job.id) }}" hx-trigger="every 1s" hx-swap="outerHTML">
+    <span class="badge text-bg-secondary">{{ job.get_status().value }}…</span>
+  </div>
+{% endif %}

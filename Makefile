@@ -9,14 +9,17 @@ PSQL := psql
 
 .PHONY: help
 help:
-	@echo "make uv        Install uv if it is not already installed"
-	@echo "make install   Install uv, Python and all dependencies into .venv"
-	@echo "make run       Run the dev server on http://localhost:8000"
-	@echo "make shell     Open a Python shell with the app loaded"
-	@echo "make lint      Check code style and common mistakes (ruff)"
-	@echo "make format    Auto-format code and fix lint issues (ruff)"
-	@echo "make typecheck Check types (ty)"
-	@echo "make vendor    Download pinned front-end libraries into static/vendor"
+	@echo "make uv             Install uv if it is not already installed"
+	@echo "make install        Install uv, Python and all dependencies into .venv"
+	@echo "make run            Run the dev server on http://localhost:8000"
+	@echo "make shell          Open a Python shell with the app loaded"
+	@echo "make redis-install  Install Redis with Homebrew if it is not already installed"
+	@echo "make redis          Run a local Redis server (installs it first if needed)"
+	@echo "make worker         Run a background job worker (RQ)"
+	@echo "make lint           Check code style and common mistakes (ruff)"
+	@echo "make format         Auto-format code and fix lint issues (ruff)"
+	@echo "make typecheck      Check types (ty)"
+	@echo "make vendor         Download pinned front-end libraries into static/vendor"
 
 .PHONY: uv
 uv:
@@ -36,6 +39,29 @@ run:
 .PHONY: shell
 shell:
 	$(FLASK) shell
+
+# Install the Redis server with Homebrew unless redis-server is already available.
+.PHONY: redis-install
+redis-install:
+	@command -v redis-server >/dev/null 2>&1 || { \
+		command -v brew >/dev/null 2>&1 || { \
+			echo "Homebrew not found. Install Redis with your package manager,"; \
+			echo "e.g. 'sudo apt install redis-server' (Debian/Ubuntu)."; \
+			exit 1; \
+		}; \
+		echo "Installing Redis..."; \
+		brew install redis; \
+	}
+
+# Run Redis; --save "" disables snapshots, so no dump.rdb is written to the repo
+.PHONY: redis
+redis: redis-install
+	redis-server --save ""
+
+# Run an RQ worker through `flask worker`, so jobs have the Flask app context
+.PHONY: worker
+worker:
+	$(FLASK) worker
 
 .PHONY: lint
 lint:
