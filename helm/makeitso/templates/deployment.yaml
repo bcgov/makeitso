@@ -41,6 +41,8 @@ spec:
                 secretKeyRef:
                   name: makeitso-github-app-secret
                   key: clientSecret
+            - name: MAKEITSO_ENV
+              value: {{ .Values.app.env | default "prod" }}
           resources:
             requests:
               cpu: 100m
@@ -56,6 +58,8 @@ spec:
                   key: uri
             - name: REDIS_SERVER_HOST
               value: {{ include "makeitso.fullname" . }}-redis.{{ .Namespace }}.svc.cluster.local
+            - name: MAKEITSO_ENV
+              value: {{ .Values.app.env | default "prod" }}
           resources:
             requests:
               cpu: 100m
