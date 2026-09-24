@@ -14,10 +14,15 @@ if TYPE_CHECKING:
 
 class Stack(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    organization: so.Mapped[str] = so.mapped_column(
+        comment="The organization that this stack belongs to"
+    )
     repository: so.Mapped[str] = so.mapped_column(
         comment="The repository that this stack deploys from"
     )
-    branch: so.Mapped[str] = so.mapped_column(comment="The branch that this stack deploys from")
+    branch: so.Mapped[str] = so.mapped_column(
+        comment="The branch that this stack deploys from"
+    )
     name: so.Mapped[str] = so.mapped_column(comment="The name of this stack")
     environment: so.Mapped[str] = so.mapped_column(
         comment="The environment that this stack should deploy to"
@@ -42,5 +47,7 @@ class Stack(db.Model):
         ),
     )
     ## relationships
-    stack_env_vars: so.Mapped[list[StackEnvVar]] = so.relationship(back_populates="stack")
+    stack_env_vars: so.Mapped[list[StackEnvVar]] = so.relationship(
+        back_populates="stack"
+    )
     commits: so.Mapped[list[Commit]] = so.relationship(back_populates="stack")

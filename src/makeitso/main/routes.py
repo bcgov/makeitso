@@ -3,8 +3,9 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 from rq.job import Job
 
 from makeitso.auth.decorators import requires_auth
-from makeitso.extensions import job_queue
+from makeitso.extensions import job_queue, db
 from makeitso.main.jobs import add_numbers
+from makeitso.models.stack import Stack
 
 # A blueprint groups related routes; create_app() registers it on the app.
 bp = Blueprint("main", __name__)
@@ -18,7 +19,8 @@ def healthz():
 # Public so logging out lands here instead of bouncing straight back through GitHub login
 @bp.get("/")
 def index():
-    return render_template("main/index.html")
+    stacks = db.session.query(Stack).all()
+    return render_template("main/index.html", stacks=stacks)
 
 
 # Queues the example job and returns its status fragment right away

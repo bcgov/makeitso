@@ -1,38 +1,8 @@
-
+{% from 'bootstrap5/form.html' import render_form %}
 {% extends "base.html" %}
 
 {% block content %}
     <h1>Create Stack</h1>
-    <form action="" method="post" novalidate class="needs-validation {{ 'was-validated' if form.errors else '' }}">
-        {{ form.hidden_tag() }}
-        <div class="mb-6">
-            {{ form.org.label }}<br>
-            {{ form.org(size=32, class="form-control") }}
-            <div class="invalid-feedback">
-                Please provide a valid organization.
-            </div>
-        </div>
-        <div class="mb-6">
-            {{ form.repo.label }}<br>
-            {{ form.repo(size=32, class="form-control") }}
-            <div class="invalid-feedback">
-                Please provide a valid repository.
-            </div>
-        </div>
-        <div class="mb-6">
-            {{ form.branch.label }}<br>
-            {{ form.branch(size=32, class="form-control") }}
-            <div class="invalid-feedback">
-                Please provide a valid branch.
-            </div>
-        </div>
-        <div class="mb-6">
-            {{ form.environment.label }}<br>
-            {{ form.environment(size=32, class="form-control") }}
-            <div class="invalid-feedback">
-                Please provide a valid environment.
-            </div>
-        </div>
-        {{ form.submit(class="btn btn-primary") }}
+        {{ render_form(form, novalidate=True) }}
     </form>
 {% endblock %}
