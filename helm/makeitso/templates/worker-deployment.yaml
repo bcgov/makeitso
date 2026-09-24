@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "makeitso.fullname" . }}-worker
+  labels:
+    component: worker
+{{- include "makeitso.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "makeitso.selectorLabels" . | nindent 6 }}
+      component: worker
+  template:
+    metadata:
+      labels:
+{{- include "makeitso.selectorLabels" . | nindent 8 }}
+        component: worker
+    spec:
+      containers:
+        - name: {{ template "makeitso.fullname" . }}-worker
+          image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
+          imagePullPolicy: {{ .Values.app.imagePullPolicy }}
+          command: ["flask", "--app", "makeitso", "worker"]
+          env:
+            {{- include "makeitso.appEnv" . | nindent 12 }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+      restartPolicy: Always
