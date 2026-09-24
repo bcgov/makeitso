@@ -4,10 +4,9 @@ from flask import Blueprint, render_template
 from redis.exceptions import ConnectionError as RedisConnectionError
 from rq.job import Job
 
+from makeitso.auth.decorators import requires_auth
 from makeitso.extensions import rq
 from makeitso.main.jobs import add_numbers
-
-from makeitso.auth.decorators import requires_auth
 
 # A blueprint groups related routes; create_app() registers it on the app.
 bp = Blueprint("main", __name__)
