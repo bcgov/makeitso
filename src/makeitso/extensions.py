@@ -8,7 +8,7 @@ from makeitso.redis_queue import RedisQueue
 bootstrap = Bootstrap5()
 db = SQLAlchemy()
 migrate = Migrate()
-rq = RedisQueue()
+job_queue = RedisQueue()
 
 oauth = OAuth()
 # Client ID and secret are read from app.config (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)

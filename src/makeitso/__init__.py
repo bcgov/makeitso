@@ -3,7 +3,7 @@ import os
 from flask import Flask
 
 from makeitso.config import configs
-from makeitso.extensions import bootstrap, db, migrate, oauth, rq
+from makeitso.extensions import bootstrap, db, job_queue, migrate, oauth
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -20,7 +20,7 @@ def create_app(config_name: str | None = None) -> Flask:
     bootstrap.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
-    rq.init_app(app)
+    job_queue.init_app(app)
     oauth.init_app(app)
 
     from makeitso import models  # noqa: F401  (registers the models with SQLAlchemy)
