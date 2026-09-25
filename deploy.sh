@@ -14,6 +14,8 @@ helm dep up ./helm/makeitso
 GIT_COMMIT=$(git rev-parse HEAD)
 
 helm upgrade -n "$CIIP_NAMESPACE_PREFIX-tools" \
-  --install --atomic  \
+  --install --rollback-on-failure  \
+  --timeout 10m \
+  --set app.imageTag="$GIT_COMMIT" \
   makeitso ./helm/makeitso
 

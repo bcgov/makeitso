@@ -19,12 +19,35 @@ spec:
 {{- include "makeitso.selectorLabels" . | nindent 8 }}
         component: app
     spec:
+      initContainers:
+        - name: init-run-migrations
+          image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
+          imagePullPolicy: {{ .Values.app.imagePullPolicy }}
+          env:
+            {{- include "makeitso.commonEnv" . | nindent 12 }}
+            {{- include "makeitso.superuserDbEnv" . | nindent 12 }}
+          command:  ["flask", "--app", "makeitso", "db", "upgrade"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 250Mi
       containers:
         - name: {{ template "makeitso.fullname" . }}-app
           image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
           imagePullPolicy: {{ .Values.app.imagePullPolicy }}
           env:
-            {{- include "makeitso.appEnv" . | nindent 12 }}
+            {{- include "makeitso.commonEnv" . | nindent 12 }}
+            {{- include "makeitso.superuserDbEnv" . | nindent 12 }}
+            - name: GITHUB_APP_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.githubAppSecretName | quote }}
+                  key: clientId
+            - name: GITHUB_APP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.githubAppSecretName | quote }}
+                  key: clientSecret
           readinessProbe:
             httpGet:
               path: /healthz
