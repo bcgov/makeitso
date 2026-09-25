@@ -23,7 +23,8 @@ spec:
           imagePullPolicy: {{ .Values.app.imagePullPolicy }}
           command: ["flask", "--app", "makeitso", "worker"]
           env:
-            {{- include "makeitso.appEnv" . | nindent 12 }}
+            {{- include "makeitso.commonEnv" . | nindent 12 }}
+            {{- include "makeitso.superuserDbEnv" . | nindent 12 }}
           resources:
             requests:
               cpu: 100m

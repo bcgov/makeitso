@@ -5,6 +5,8 @@ app:
   replicas: 1
   env: prod
 
+  githubAppSecretName: makeitso-github-app-secret
+
 worker:
   replicas: 1
 
@@ -22,11 +24,14 @@ db:
       replicaCount: 2
     users:
       - name: postgres
-        databases:
-          - makeitso
+        password:
+          type: AlphaNumeric
+        options: "SUPERUSER"
       - name: makeitso
         databases:
           - makeitso
+        password:
+          type: AlphaNumeric
 
 route:
   host: "makeitso.apps.silver.devops.gov.bc.ca"

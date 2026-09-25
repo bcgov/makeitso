@@ -64,14 +64,9 @@ Create the name of the service account to use
 {{/*
 Environment shared by the app
 */}}
-{{- define "makeitso.appEnv" -}}
+{{- define "makeitso.commonEnv" -}}
 - name: MAKEITSO_ENV
   value: {{ .Values.app.env | default "prod" }}
-- name: DATABASE_URL
-  valueFrom:
-    secretKeyRef:
-      name: makeitso-db-pguser-postgres
-      key: uri
 - name: REDIS_URL
   value: redis://{{ include "makeitso.fullname" . }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379
 - name: SECRET_KEY
@@ -79,14 +74,65 @@ Environment shared by the app
     secretKeyRef:
       name: {{ include "makeitso.fullname" . }}-secret
       key: appSecretKey
-- name: GITHUB_APP_CLIENT_ID
+{{- end }}
+
+{{- define "makeitso.dbEnv" -}}
+- name: DB_USER
   valueFrom:
     secretKeyRef:
-      name: {{ .Values.app.secretName }}
-      key: clientId
-- name: GITHUB_APP_CLIENT_SECRET
+      name: makeitso-db-pguser-makeitso
+      key: user
+- name: DB_PASSWORD
   valueFrom:
     secretKeyRef:
-      name: {{ .Values.app.secretName }}
-      key: clientSecret
+      name: makeitso-db-pguser-makeitso
+      key: password
+- name: DB_HOST
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-makeitso
+      key: host
+- name: DB_PORT
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-makeitso
+      key: port
+- name: DB_NAME
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-makeitso
+      key: dbname
+{{- end }}
+
+{{- define "makeitso.superuserDbEnv" -}}
+- name: DB_USER
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-postgres
+      key: user
+- name: DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-postgres
+      key: password
+- name: DB_HOST
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-postgres
+      key: host
+- name: DB_PORT
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-postgres
+      key: port
+- name: DB_NAME
+  valueFrom:
+    secretKeyRef:
+      name: makeitso-db-pguser-makeitso
+      key: dbname
+{{- end }}
+
+{{- define "makeitso.appEnv" -}}
+{{ include "makeitso.commonEnv" . }}
+{{ include "makeitso.dbEnv" . }}
 {{- end }}

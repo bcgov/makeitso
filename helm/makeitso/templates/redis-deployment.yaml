@@ -10,6 +10,9 @@ spec:
     matchLabels:
 {{- include "makeitso.selectorLabels" . | nindent 6 }}
       component: redis
+  strategy:
+    # PVC is ReadWriteOnce, a rolling update would be blocking
+    type: Recreate
   template:
     metadata:
       labels:
