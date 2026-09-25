@@ -22,6 +22,8 @@ class Config:
 
     GITHUB_CLIENT_ID = os.environ.get("GITHUB_APP_CLIENT_ID")
     GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_APP_CLIENT_SECRET")
+    # Used by background jobs, which have no logged-in user
+    GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 
     DB_USER = os.environ.get("DB_USER", "postgres")
     SQLALCHEMY_DATABASE_URI = (
