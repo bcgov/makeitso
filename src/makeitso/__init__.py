@@ -3,7 +3,7 @@ import os
 from flask import Flask
 
 from makeitso.config import configs
-from makeitso.extensions import bootstrap, db, job_queue, migrate, oauth
+from makeitso.extensions import bootstrap, csrf, db, job_queue, migrate, oauth
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -18,6 +18,7 @@ def create_app(config_name: str | None = None) -> Flask:
         raise RuntimeError(f"SECRET_KEY is not set (MAKEITSO_ENV={config_name})")
 
     bootstrap.init_app(app)
+    csrf.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
     job_queue.init_app(app)
