@@ -4,7 +4,7 @@ from rq.job import Job
 
 from makeitso.auth.decorators import requires_auth
 from makeitso.extensions import job_queue, db
-from makeitso.main.jobs import add_numbers
+from makeitso.main.jobs import add_numbers, run_bash_script
 from makeitso.models.stack import Stack
 
 # A blueprint groups related routes; create_app() registers it on the app.
@@ -28,7 +28,9 @@ def index():
 @requires_auth
 def enqueue_example_job():
     try:
-        job = job_queue.queue.enqueue(add_numbers, 2, 3)
+        job = job_queue.queue.enqueue(
+            run_bash_script, "example_commit_sha", job_id="example_commit_sha"
+        )
     except RedisConnectionError:
         return render_template("main/_job_status.html", job=None)
     return render_template("main/_job_status.html", job=job)
