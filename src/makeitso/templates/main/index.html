@@ -40,7 +40,9 @@
   <div class="card-body">
     <h2 class="h5 card-title">Background job (RQ)</h2>
     <button type="button" class="btn btn-primary"
-            hx-post="{{ url_for('main.enqueue_example_job') }}" hx-target="#job-status">
+            hx-post="{{ url_for('main.enqueue_example_job') }}" 
+            hx-target="#job-status" 
+            hx-vals='{"commit_sha": "11848c733450c30e729960cfd4b14dc237f5ed86"}'>
       Run example job
     </button>
     <div id="job-status" class="mt-3"></div>
