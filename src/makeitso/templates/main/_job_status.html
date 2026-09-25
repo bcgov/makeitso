@@ -2,12 +2,28 @@
 {% if job is none %}
   <span class="badge text-bg-danger">Redis is not reachable. Run <code>make redis</code>.</span>
 {% elif job.is_finished %}
+  <pre>{{ job.id }}</pre>
+  <pre class="pre-scrollable" style="height: 200px; color:lightgray; background: black">
+    <code>{{ job.meta["output"] }}</code>
+  </pre>
   <span class="badge text-bg-success">Finished, result: {{ job.return_value() }}</span>
 {% elif job.is_failed %}
+  <pre>{{ job.id }}</pre>
+  <pre class="pre-scrollable" style="height: 200px; color:lightgray; background: black">
+    <code>{{ job.meta["output"] }}</code>
+  </pre>
   <span class="badge text-bg-danger">Failed</span>
 {% else %}
   {# Not done yet: replace this div with a fresh status every second; polling stops once it's finished. #}
   <div hx-get="{{ url_for('main.example_job_status', job_id=job.id) }}" hx-trigger="every 1s" hx-swap="outerHTML">
+    <pre>{{ job.id }}</pre>
+    <pre  class="pre-scrollable" style="height: 200px; color:lightgray; background: black" x-data="{
+    scrollToBottom() {
+        this.$refs.container.scrollTop = this.$refs.container.scrollHeight;
+    }
+}" x-init="scrollToBottom()" x-ref="container">
+      <code>{{ job.meta["output"] }}</code>
+    </pre>
     <span class="badge text-bg-secondary">{{ job.get_status().value }}…</span>
   </div>
 {% endif %}

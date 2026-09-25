@@ -17,6 +17,7 @@ spec:
 {{- include "makeitso.selectorLabels" . | nindent 8 }}
         component: worker
     spec:
+      restartPolicy: Always
       containers:
         - name: {{ template "makeitso.fullname" . }}-worker
           image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
@@ -29,4 +30,11 @@ spec:
             requests:
               cpu: 100m
               memory: 500Mi
-      restartPolicy: Always
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+      volumes:
+        - name: workspace
+          emptyDir:
+            sizeLimit: 1Gi
+      
