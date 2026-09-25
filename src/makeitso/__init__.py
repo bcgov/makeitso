@@ -9,9 +9,7 @@ from makeitso.extensions import bootstrap, db, job_queue, migrate, oauth
 def create_app(config_name: str | None = None) -> Flask:
     config_name = config_name or os.environ.get("MAKEITSO_ENV")
     if config_name not in configs:
-        raise RuntimeError(
-            f"MAKEITSO_ENV must be one of {list(configs)}, got {config_name!r}"
-        )
+        raise RuntimeError(f"MAKEITSO_ENV must be one of {list(configs)}, got {config_name!r}")
 
     app = Flask(__name__)
     app.config.from_object(configs[config_name])
