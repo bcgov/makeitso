@@ -18,12 +18,11 @@ class NewStackView(MethodView):
     @requires_auth
     def post(self):
         if self.form.validate_on_submit():
-            # Handle form submission for creating a new stack
             stack = Stack(
-                organization=self.form.org.data,
-                repository=self.form.repo.data,
+                organization=self.form.organization.data,
+                repository=self.form.repository.data,
                 branch=self.form.branch.data,
-                name=self.form.repo.data,
+                name=self.form.repository.data,
                 environment=self.form.environment.data,
             )
             db.session.add(stack)
