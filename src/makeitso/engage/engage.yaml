@@ -1,0 +1,20 @@
+# Sample engage.yaml for local testing
+
+deploy:
+  file: deploy.sh
+  timeout: 1800
+
+review:
+  checklist:
+    - Is it Friday?
+    - Did you tell the team?
+
+ci:
+  allow_failures:
+    - Dependabot
+    - notify
+    - "test-code / yarn-audit"
+    - "Happo (cas-administration)"
+    - "Happo (cas-compliance)"
+    - "Happo (cas-registration)"
+    - "Happo (cas-reporting)"
