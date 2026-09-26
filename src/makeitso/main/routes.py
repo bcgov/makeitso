@@ -3,7 +3,7 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 from rq.job import Job
 
 from makeitso.auth.decorators import requires_auth
-from makeitso.extensions import job_queue, db
+from makeitso.extensions import db, job_queue
 from makeitso.main.jobs import add_numbers
 from makeitso.models.stack import Stack
 
@@ -19,7 +19,7 @@ def healthz():
 # Public so logging out lands here instead of bouncing straight back through GitHub login
 @bp.get("/")
 def index():
-    stacks = db.session.query(Stack).all()
+    stacks = db.session.scalars(Stack.active()).all()
     return render_template("main/index.html", stacks=stacks)
 
 

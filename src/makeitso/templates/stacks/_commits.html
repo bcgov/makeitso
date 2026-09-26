@@ -1,0 +1,53 @@
+{# While a sync is active, reload this list every 2s; the finished list has no hx-get, so polling stops #}
+<div id="commits"
+     {% if sync.active %}class="syncing"
+     hx-get="{{ url_for('stacks.commits', stack_id=stack.id) }}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+    {% if sync.status == "queued" %}
+        <p class="small text-muted mb-2">Sync queued, waiting for a background worker…</p>
+    {% elif sync.active %}
+        <p class="small text-muted mb-2">Syncing with GitHub…</p>
+    {% endif %}
+
+    {% if sync.error %}
+        <div class="alert alert-danger">{{ sync.error }}</div>
+    {% endif %}
+
+    <ul class="list-unstyled">
+        {% for commit in commits %}
+            <li class="d-flex align-items-center gap-3 py-3 border-bottom">
+                {% if commit.author_avatar_url %}
+                    <img src="{{ commit.author_avatar_url }}" alt="" width="40" height="40" class="rounded">
+                {% else %}
+                    <div class="rounded bg-secondary-subtle" style="width: 40px; height: 40px"></div>
+                {% endif %}
+
+                <div style="width: 12rem">
+                    {% if commit.author_url %}
+                        <a href="{{ commit.author_url }}" target="_blank" rel="noopener">{{ commit.author_name }}</a>
+                        <div class="small text-muted">{{ commit.author_login }}</div>
+                    {% else %}
+                        {{ commit.author_name }}
+                    {% endif %}
+                </div>
+
+                <div style="width: 2.5rem">
+                    {% include "stacks/_checks.html" %}
+                </div>
+
+                <div>
+                    <a href="{{ commit.url }}" target="_blank" rel="noopener"
+                       class="fw-semibold">{{ commit.commit_message }}</a>
+                    {% if commit.pull_request_number %}
+                        <a href="https://github.com/{{ stack.organization }}/{{ stack.repository }}/pull/{{ commit.pull_request_number }}"
+                           target="_blank" rel="noopener" class="text-muted">#{{ commit.pull_request_number }}</a>
+                    {% endif %}
+                    <div class="small text-muted">
+                        <code>{{ commit.short_sha }}</code> · {{ commit.committed_at.strftime("%b %d, %Y %H:%M") }}
+                    </div>
+                </div>
+            </li>
+        {% else %}
+            <li class="text-muted py-3">No commits yet. Press Sync to load them from GitHub.</li>
+        {% endfor %}
+    </ul>
+</div>
