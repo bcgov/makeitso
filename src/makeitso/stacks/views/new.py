@@ -5,6 +5,7 @@ from makeitso.auth.decorators import requires_auth
 from makeitso.extensions import db
 from makeitso.models.stack import Stack
 from makeitso.stacks.forms import NewStackForm
+from makeitso.stacks.tasks import enqueue_sync
 
 
 class NewStackView(MethodView):
@@ -27,6 +28,8 @@ class NewStackView(MethodView):
             )
             db.session.add(stack)
             db.session.commit()
+            # Load the stack's commits in the background
+            enqueue_sync(stack.id)
 
             return redirect("/")
 
