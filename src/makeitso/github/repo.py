@@ -39,6 +39,14 @@ class GitHubRepo:
             return False
         return True
 
+    @property
+    def owner(self) -> str:
+        return self.repo.owner.login
+
+    @property
+    def name(self) -> str:
+        return self.repo.name
+
     def has_branch(self, branch: str) -> bool:
         try:
             self.repo.get_branch(branch)
