@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ stack.repository }} {{ stack.environment }} · makeitso{% endblock %}
+{% set title = stack.repository ~ " " ~ stack.environment %}
 
 {% block navbar_brand %}
     <span class="navbar-org">{{ stack.organization }}</span>

@@ -14,7 +14,7 @@ class NewStackView(MethodView):
 
     @requires_auth
     def get(self):
-        return render_template("stacks/new.html", title="New Stack", form=self.form)
+        return render_template("stacks/new.html", form=self.form)
 
     @requires_auth
     def post(self):
@@ -33,4 +33,4 @@ class NewStackView(MethodView):
 
             return redirect("/")
 
-        return render_template("stacks/new.html", title="New Stack", form=self.form)
+        return render_template("stacks/new.html", form=self.form)

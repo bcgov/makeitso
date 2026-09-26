@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}makeitso{% endblock %}</title>
+  {# Pages set `title` with {% set title = "..." %} at the top of their template #}
+  <title>{% if title %}{{ title }} · {% endif %}makeitso</title>
   {{ bootstrap.load_css() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
   <script src="{{ url_for('static', filename='vendor/htmx/htmx.min.js') }}" defer></script>
