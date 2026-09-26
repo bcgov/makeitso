@@ -14,8 +14,8 @@ class CommitStatus(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     commit_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("commit.id"))
     name: so.Mapped[str] = so.mapped_column(comment="The name of the check pulled from github")
-    conclusion: so.Mapped[str] = so.mapped_column(
-        comment="The conclusion status of the check pulled from github"
+    state: so.Mapped[str] = so.mapped_column(
+        comment="The conclusion of the check if finished (success, failure, ...), else its status"
     )
     html_url: so.Mapped[str] = so.mapped_column(comment="The url to the source of the check")
     ## relationships

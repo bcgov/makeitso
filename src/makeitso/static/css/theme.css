@@ -32,6 +32,53 @@
   border-bottom: 2px solid var(--bc-yellow);
 }
 
+.navbar-org {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  line-height: 1;
+}
+
+.navbar-repo {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
 [x-cloak] {
   display: none !important;
+}
+
+/* Sync button spinner: shown from the click until the background sync is done */
+.sync-spinner {
+  display: none;
+}
+
+#sync-form.htmx-request .sync-spinner,
+body:has(#commits.syncing) .sync-spinner {
+  display: inline-block;
+}
+
+/* Look and act disabled while syncing; extra clicks would be ignored by the server anyway */
+body:has(#commits.syncing) #sync-form button {
+  pointer-events: none;
+  opacity: var(--bs-btn-disabled-opacity);
+}
+
+/* While a sync runs, the commits are about to be replaced: dim them and pulse */
+#commits.syncing ul {
+  animation: syncing 1.2s ease-in-out infinite;
+}
+
+@keyframes syncing {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
 }
