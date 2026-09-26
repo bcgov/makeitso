@@ -19,7 +19,7 @@ def healthz():
 # Public so logging out lands here instead of bouncing straight back through GitHub login
 @bp.get("/")
 def index():
-    stacks = db.session.query(Stack).all()
+    stacks = db.session.scalars(Stack.active()).all()
     return render_template("main/index.html", stacks=stacks)
 
 

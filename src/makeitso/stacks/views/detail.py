@@ -13,13 +13,13 @@ from makeitso.stacks.tasks import enqueue_sync, sync_state
 class StackDetailView(MethodView):
     @requires_auth
     def get(self, stack_id: int):
-        stack = db.get_or_404(Stack, stack_id)
+        stack = db.first_or_404(Stack.active().where(Stack.id == stack_id))
         return render_template("stacks/detail.html", **_commits_context(stack))
 
     @requires_auth
     def post(self, stack_id: int):
         """Queue a sync; the worker loads the commits from GitHub"""
-        stack = db.get_or_404(Stack, stack_id)
+        stack = db.first_or_404(Stack.active().where(Stack.id == stack_id))
         enqueue_sync(stack.id)
         # HTMX swaps in the list, which polls until the sync is done
         if request.headers.get("HX-Request"):
@@ -33,7 +33,7 @@ class StackCommitsView(MethodView):
 
     @requires_auth
     def get(self, stack_id: int):
-        stack = db.get_or_404(Stack, stack_id)
+        stack = db.first_or_404(Stack.active().where(Stack.id == stack_id))
         return render_template("stacks/_commits.html", **_commits_context(stack))
 
 

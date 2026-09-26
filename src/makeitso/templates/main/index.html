@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "bootstrap5/utils.html" import render_icon %}
+{% from "stacks/_delete_modal.html" import delete_modal %}
 
 
 {% block content %}
@@ -28,9 +29,9 @@
                             <a class="btn btn-sm btn-link" href="{{ stack_url }}" title="View" aria-label="View">
                                 {{ render_icon("eye", size="1.8em") }}
                             </a>
-                            {# Not implemented yet #}
                             <button type="button" class="btn btn-sm btn-link text-danger" title="Delete"
-                                    aria-label="Delete" disabled>
+                                    aria-label="Delete" data-bs-toggle="modal"
+                                    data-bs-target="#delete-stack-{{ stack.id }}">
                                 {{ render_icon("trash", size="1.8em") }}
                             </button>
                         </td>
@@ -38,6 +39,11 @@
                 {% endfor %}
                 </tbody>
             </table>
+
+            {# Outside the table so the dialogs don't inherit its cell styles #}
+            {% for stack in stacks %}
+                {{ delete_modal(stack) }}
+            {% endfor %}
         </div>
 
     {% else %}

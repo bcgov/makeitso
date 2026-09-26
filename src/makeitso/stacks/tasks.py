@@ -27,8 +27,8 @@ class SyncState:
 
 def sync_stack(stack_id: int) -> None:
     """Background job: save a stack's latest commits and checks from GitHub"""
-    stack = db.session.get(Stack, stack_id)
-    # The stack may have been deleted before the job ran
+    stack = db.session.scalar(Stack.active().where(Stack.id == stack_id))
+    # The stack may have been deleted (archived) before the job ran
     if stack is None:
         return
     try:

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -13,6 +13,19 @@ if TYPE_CHECKING:
 
 
 class Stack(db.Model):
+    __table_args__ = (
+        # Only one active stack per repo and environment; archived (deleted) ones don't count,
+        # so a deleted stack can be created again
+        sa.Index(
+            "uq_stack_active_repo_environment",
+            "organization",
+            "repository",
+            "environment",
+            unique=True,
+            postgresql_where=sa.text("archived_at IS NULL"),
+        ),
+    )
+
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     organization: so.Mapped[str] = so.mapped_column(
         comment="The organization that this stack belongs to"
@@ -47,3 +60,8 @@ class Stack(db.Model):
     ## relationships
     stack_env_vars: so.Mapped[list[StackEnvVar]] = so.relationship(back_populates="stack")
     commits: so.Mapped[list[Commit]] = so.relationship(back_populates="stack")
+
+    @classmethod
+    def active(cls) -> sa.Select[tuple[Self]]:
+        """Select stacks that aren't archived; deleting a stack archives it"""
+        return sa.select(cls).where(cls.archived_at.is_(None))
