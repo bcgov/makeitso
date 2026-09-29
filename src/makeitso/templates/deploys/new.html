@@ -1,3 +1,9 @@
+{% from 'bootstrap5/form.html' import render_form %}
+{% extends "base.html" %}
+{% set title = "New Deploy" %}
 
-
-<p>New {{ deploy_id }}</p>
+{% block content %}
+    <h1>Create Deploy</h1>
+    <h4>Deploying from ...latest_deployed_commit -> {{commit_sha}}</h4>
+    {{ render_form(form, novalidate=True) }}
+{% endblock %}
