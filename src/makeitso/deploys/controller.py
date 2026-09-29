@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 
+from rq import Callback
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
@@ -34,17 +35,15 @@ def deployment_task(commit_sha: str, stack_id: int) -> int:
             "COMMIT_SHA": commit_sha,
             "STACK_ORG": stack.organization,
             "STACK_REPO": stack.repository,
-        },
-        timeout=900,  # 15 min
+        }
     )
 
     while proc.poll() is None:
         time.sleep(1)
         lines = proc.stdout.readlines()
-        print(lines)
         if lines and len(lines) > 0:
             job = Job.fetch(commit_sha, connection=job_queue.queue.connection)
-            job.meta["output"] = job.meta.get("output", "") + lines
+            job.meta["output"] = job.meta.get("output", "") + "\n".join(lines)
             job.save_meta()
 
     if proc.returncode != 0:
@@ -122,21 +121,30 @@ class Controller:
             stack.id,
             job_id=commit_sha,
             meta={"deploy_id": deploy.id},
+            on_success=Callback(Controller._on_success),
+            on_failure=Callback(Controller._on_failure),
+            on_stopped=Callback(Controller._on_stopped),
         )
 
         return deploy
 
     @staticmethod
     def _on_success(job, connection, result, *args, **kwargs):
-        # update deployment
-        pass
+        deploy_id = job.meta.get("deploy_id")
+        deploy = db.session.get(Deploy, deploy_id)
+        deploy.status = DeployStatus.SUCCEEDED
+        db.session.commit()
 
     @staticmethod
     def _on_failure(job, connection, type, value, traceback):
-        # update deployment on failure
-        pass
+        deploy_id = job.meta.get("deploy_id")
+        deploy = db.session.get(Deploy, deploy_id)
+        deploy.status = DeployStatus.FAILED
+        db.session.commit()
 
     @staticmethod
     def _on_stopped(job, connection):
-        # update deployment on stop
-        pass
+        deploy_id = job.meta.get("deploy_id")
+        deploy = db.session.get(Deploy, deploy_id)
+        deploy.status = DeployStatus.ABORTED
+        db.session.commit()
