@@ -1,0 +1,7 @@
+
+deploy:
+  file: deploy.sh
+
+review:
+  checklist:
+    - Is today Friday?
