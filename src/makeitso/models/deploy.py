@@ -1,10 +1,14 @@
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 
 from makeitso.extensions import db
+
+if TYPE_CHECKING:
+    from makeitso.models.commit import Commit
 
 
 class DeployStatus(enum.Enum):
@@ -28,7 +32,8 @@ class Deploy(db.Model):
         comment="The datetime in UTC that the deploy attempt was started",
     )
     ended_at: so.Mapped[datetime | None] = so.mapped_column(
-        sa.DateTime(timezone=True), comment="The datetime in UTC that the deploy attempt ended"
+        sa.DateTime(timezone=True),
+        comment="The datetime in UTC that the deploy attempt ended",
     )
     status: so.Mapped[DeployStatus] = so.mapped_column(
         db.Enum(DeployStatus),
@@ -40,3 +45,5 @@ class Deploy(db.Model):
     deployed_with_bypass: so.Mapped[bool] = so.mapped_column(
         comment="Boolean value indicates if this deploy was created by bypassing safeties"
     )
+
+    commit: so.Mapped[Commit] = so.relationship(back_populates="deploys")

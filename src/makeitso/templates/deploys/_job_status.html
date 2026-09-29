@@ -1,6 +1,6 @@
 {# Status of the example job. While it's running, this fragment re-fetches itself every second. #}
 {% if job is none %}
-  <span class="badge text-bg-danger">Redis is not reachable. Run <code>make redis</code>.</span>
+  <span class="badge text-bg-danger">Job not started or Redis is not reachable. Run <code>make redis</code>.</span>
 {% elif job.is_finished %}
   <pre>{{ job.id }}</pre>
   <pre class="pre-scrollable" style="height: 200px; color:lightgray; background: black">
