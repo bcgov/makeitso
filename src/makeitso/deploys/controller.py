@@ -15,7 +15,12 @@ from makeitso.models.stack import Stack
 from makeitso.extensions import job_queue, db
 
 
-def deployment_task(commit_sha: str, stack: Stack) -> int:
+def deployment_task(commit_sha: str, stack_id: int) -> int:
+    stack = db.session.scalar(
+        sa.select(Stack).filter_by(
+            id=stack_id
+        )
+    )
     print(
         f"Starting deployment for commit {commit_sha} on stack {stack.organization}/{stack.repository}"
     )
@@ -53,7 +58,7 @@ def deployment_task(commit_sha: str, stack: Stack) -> int:
 class Controller:
 
     @classmethod
-    def get_job(cls, commit_sha: str) -> Job:
+    def get_job(cls, commit_sha: str) -> Job | None:
         try:
             job = Job.fetch(commit_sha, connection=job_queue.queue.connection)
             return job
@@ -114,7 +119,7 @@ class Controller:
         job = job_queue.queue.enqueue(
             deployment_task,
             commit_sha,
-            stack,
+            stack.id,
             job_id=commit_sha,
             meta={"deploy_id": deploy.id},
         )
