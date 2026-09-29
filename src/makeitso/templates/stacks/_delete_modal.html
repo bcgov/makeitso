@@ -1,0 +1,25 @@
+{# Confirmation dialog for deleting a stack; the trash button opens it with data-bs-target="#delete-stack-<id>" #}
+{% macro delete_modal(stack) %}
+    <div class="modal fade" id="delete-stack-{{ stack.id }}" tabindex="-1"
+         aria-labelledby="delete-stack-{{ stack.id }}-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="delete-stack-{{ stack.id }}-title">Delete stack?</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <strong>{{ stack.organization }}/{{ stack.repository }} ({{ stack.environment }})</strong>
+                    will be removed from the list. Its commit history is kept.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="post" action="{{ url_for('stacks.delete', stack_id=stack.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
