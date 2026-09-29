@@ -2,10 +2,13 @@ from authlib.integrations.flask_client import OAuth
 from flask_bootstrap import Bootstrap5
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 
 from makeitso.redis_queue import RedisQueue
 
 bootstrap = Bootstrap5()
+# Checks the CSRF token on every POST/PUT/PATCH/DELETE request
+csrf = CSRFProtect()
 db = SQLAlchemy()
 migrate = Migrate()
 job_queue = RedisQueue()

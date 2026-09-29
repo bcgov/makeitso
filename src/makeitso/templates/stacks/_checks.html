@@ -1,0 +1,35 @@
+{% from "bootstrap5/utils.html" import render_icon %}
+
+{% macro state_icon(state, size) -%}
+    {%- if state == "success" -%}{{ render_icon("check-circle-fill", size=size, color="success") }}
+        {%- elif state in ("failure", "cancelled", "timed_out") -%}{{ render_icon("x-circle-fill", size=size, color="danger") }}
+        {%- elif state in ("skipped", "neutral", "stale") -%}{{ render_icon("dash-circle", size=size, color="secondary") }}
+        {%- else -%}{{ render_icon("clock-fill", size=size, color="warning") }}
+    {%- endif -%}
+{%- endmacro %}
+
+<span class="position-relative d-inline-block" tabindex="0" x-data="{ open: false }"
+      @mouseenter="open = true" @mouseleave="open = false" @focusin="open = true" @focusout="open = false">
+  {{ state_icon(commit.checks_state or "neutral", "1.75em") }}
+
+  <div class="position-absolute start-100 top-50 translate-middle-y ps-2" style="z-index: 1070"
+       x-show="open" x-cloak>
+    <div class="popover position-static" style="width: max-content; max-width: 22rem" role="tooltip">
+      <div class="popover-body overflow-y-auto" style="max-height: 16rem">
+        {% for check in commit.commit_statuses %}
+            <div class="d-flex align-items-center gap-2" title="{{ check.name }} ({{ check.state }})">
+          <span class="d-inline-flex flex-shrink-0">{{ state_icon(check.state, "1em") }}</span>
+                {% if check.html_url %}
+                    <a href="{{ check.html_url }}" target="_blank" rel="noopener"
+                       class="text-truncate">{{ check.name }}</a>
+                {% else %}
+                    <span class="text-truncate">{{ check.name }}</span>
+                {% endif %}
+        </div>
+        {% else %}
+            <div class="text-muted">This commit has no CI checks.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</span>

@@ -3,7 +3,7 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 from rq.job import Job
 
 from makeitso.auth.decorators import requires_auth
-from makeitso.extensions import job_queue, db
+from makeitso.extensions import db, job_queue
 from makeitso.main.jobs import add_numbers
 from makeitso.models.stack import Stack
 

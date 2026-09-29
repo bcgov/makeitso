@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% set title = stack.repository ~ " " ~ stack.environment %}
+
+{% block navbar_brand %}
+    <span class="navbar-org">{{ stack.organization }}</span>
+    <span class="d-flex align-items-center gap-2">
+  <span class="navbar-repo">{{ stack.repository }}</span>
+  <span class="badge rounded-pill text-bg-warning">{{ stack.environment }}</span>
+</span>
+{% endblock %}
+
+{% block navbar_actions %}
+    {# HTMX posts the form, including its CSRF input, and swaps in the new commit list #}
+    <form id="sync-form" method="post" class="d-inline"
+          hx-post="{{ url_for('stacks.detail', stack_id=stack.id) }}" hx-target="#commits" hx-swap="outerHTML">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-primary border-light d-inline-flex align-items-center gap-2">
+            <span class="spinner-border spinner-border-sm sync-spinner" aria-hidden="true"></span>
+            Sync
+        </button>
+    </form>
+    <a class="btn btn-sm btn-outline-light"
+       href="https://github.com/{{ stack.organization }}/{{ stack.repository }}/tree/{{ stack.branch }}"
+       target="_blank" rel="noopener">View on GitHub</a>
+{% endblock %}
+
+{% block content %}
+    <h2 class="h4 border-bottom pb-2">Commits on <code>{{ stack.branch }}</code></h2>
+
+    {% include "stacks/_commits.html" %}
+{% endblock %}

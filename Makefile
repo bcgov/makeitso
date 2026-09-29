@@ -22,6 +22,8 @@ help:
 	@echo "make migrate        Generate a migration: make migrate ARGS='-m \"message\"'"
 	@echo "make upgrade_db     Apply pending migrations"
 	@echo "make downgrade_db   Roll back migrations: ARGS='<revision>' or ARGS='-1'"
+	@echo "make drop_db        Drop the $(DB_NAME) database if it exists (deletes all data)"
+	@echo "make reset_db      Drop the $(DB_NAME) database, recreate it and apply all migrations (deletes all data)"
 	@echo "make lint           Check code style and common mistakes (ruff)"
 	@echo "make format         Auto-format code and fix lint issues (ruff)"
 	@echo "make typecheck      Check types (ty)"
@@ -66,8 +68,9 @@ redis: redis-install
 
 # Run an RQ worker through `flask worker`, so jobs have the Flask app context
 .PHONY: worker
+# OBJC_...=YES stops macOS from killing each job's forked process (ignored on Linux)
 worker:
-	$(FLASK) worker
+	OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES $(FLASK) worker
 
 .PHONY: create_db
 create_db:
@@ -98,6 +101,14 @@ upgrade_db:
 .PHONY: downgrade_db
 downgrade_db:
 	$(FLASK) db downgrade $(ARGS)
+
+# FORCE disconnects open sessions, e.g. a running `make run`
+.PHONY: drop_db
+drop_db:
+	$(PSQL) -d postgres -c "DROP DATABASE IF EXISTS $(DB_NAME) WITH (FORCE)"
+
+.PHONY: reset_db
+reset_db: drop_db create_db upgrade_db
 
 .PHONY: lint
 lint:
