@@ -1,4 +1,3 @@
-import datetime
 import os
 import subprocess
 
@@ -72,7 +71,6 @@ class Controller:
         deploy = Deploy(
             stack_id=stack_id,
             commit_id=commit.id,
-            started_at=datetime.datetime.now(datetime.UTC),
             status=DeployStatus.IN_PROGRESS,
             output="",
             deployed_with_bypass=bypass,
