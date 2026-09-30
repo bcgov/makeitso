@@ -1,4 +1,3 @@
-{# Status of the example job. While it's running, this fragment re-fetches itself every second. #}
 {% if job is none %}
   <span class="badge text-bg-danger">Job not started or Redis is not reachable. Run <code>make redis</code>.</span>
 {% elif job.is_finished %}
@@ -17,11 +16,7 @@
   {# Not done yet: replace this div with a fresh status every second; polling stops once it's finished. #}
   <div hx-get="{{ url_for('stacks.deploys.detail', stack_id=stack_id, deploy_id=deploy_id) }}" hx-trigger="every 1s" hx-swap="outerHTML">
     <pre>{{ job.id }}</pre>
-    <pre class="pre-scrollable" style="height: 200px; color:lightgray; background: black" x-data="{
-    scrollToBottom() {
-        this.$refs.container.scrollTop = this.$refs.container.scrollHeight;
-    }
-}" x-init="scrollToBottom()" x-ref="container">
+    <pre class="pre-scrollable" style="height: 200px; color:lightgray; background: black">
       <code>{{ job.meta["output"] }}</code>
     </pre>
     <span class="badge text-bg-secondary">{{ job.get_status().value }}…</span>
