@@ -42,4 +42,3 @@ spec:
         - name: workspace
           emptyDir:
             sizeLimit: 1Gi
-      
