@@ -1,3 +1,4 @@
+{% from "bootstrap5/utils.html" import render_icon %}
 {# While a sync is active, reload this list every 2s; the finished list has no hx-get, so polling stops #}
 <div id="commits"
      {% if sync.active %}class="syncing"
@@ -45,10 +46,13 @@
                         <code>{{ commit.short_sha }}</code> · {{ commit.committed_at.strftime("%b %d, %Y %H:%M") }}
                     </div>
                 </div>
-                <div>
-                  <a class="btn btn-sm btn-primary border-light d-inline-flex align-items-center gap-2" href="{{ url_for('stacks.deploys.new', stack_id=stack.id, commit_sha=commit.commit_sha) }}">
-                    Deploy
-                  </a>
+                <div class="ms-auto">
+                    <a class="btn btn-primary d-inline-flex align-items-center gap-2 px-3{% if sync.active %} disabled{% endif %}"
+                       {% if sync.active %}aria-disabled="true" tabindex="-1"{% endif %}
+                       href="{{ url_for('stacks.deploys.new', stack_id=stack.id, commit_sha=commit.commit_sha) }}">
+                        {{ render_icon("rocket-takeoff") }}
+                        Deploy
+                    </a>
                 </div>
             </li>
         {% else %}
