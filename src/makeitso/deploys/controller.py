@@ -101,9 +101,7 @@ class Controller:
                 "scheduled",
                 "deferred",
             ]:
-                raise Exception(
-                    "A deployment job is already in progress for this commit."
-                )
+                raise Exception("A deployment job is already in progress for this commit.")
 
         except NoSuchJobError:
             # Happy path: there is no existing job, so we can enqueue a new one
