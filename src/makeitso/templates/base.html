@@ -13,7 +13,7 @@
 <body>
   <nav class="navbar bg-primary bc-header" data-bs-theme="dark">
     <div class="container">
-      <a class="navbar-brand" href="{{ url_for('main.index') }}">
+      <a class="navbar-brand" href="{% block navbar_brand_url %}{{ url_for('main.index') }}{% endblock %}">
         {% block navbar_brand %}makeitso{% endblock %}
       </a>
       <div class="d-flex align-items-center gap-3">
