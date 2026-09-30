@@ -2,13 +2,7 @@
 
 {% set title = stack.repository ~ " " ~ stack.environment %}
 
-{% block navbar_brand %}
-    <span class="navbar-org">{{ stack.organization }}</span>
-    <span class="d-flex align-items-center gap-2">
-  <span class="navbar-repo">{{ stack.repository }}</span>
-  <span class="badge rounded-pill text-bg-warning">{{ stack.environment }}</span>
-</span>
-{% endblock %}
+{% block navbar_brand %}{% include "stacks/_navbar_brand.html" %}{% endblock %}
 
 {% block navbar_actions %}
     {# HTMX posts the form, including its CSRF input, and swaps in the new commit list #}
