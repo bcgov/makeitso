@@ -26,6 +26,11 @@ spec:
           env:
             {{- include "makeitso.commonEnv" . | nindent 12 }}
             {{- include "makeitso.superuserDbEnv" . | nindent 12 }}
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.githubAppSecretName | quote }}
+                  key: ghToken
           resources:
             requests:
               cpu: 100m
