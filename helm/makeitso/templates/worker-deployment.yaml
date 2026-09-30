@@ -17,6 +17,7 @@ spec:
 {{- include "makeitso.selectorLabels" . | nindent 8 }}
         component: worker
     spec:
+      restartPolicy: Always
       containers:
         - name: {{ template "makeitso.fullname" . }}-worker
           image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
@@ -25,8 +26,20 @@ spec:
           env:
             {{- include "makeitso.commonEnv" . | nindent 12 }}
             {{- include "makeitso.superuserDbEnv" . | nindent 12 }}
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.githubAppSecretName | quote }}
+                  key: ghToken
           resources:
             requests:
               cpu: 100m
               memory: 500Mi
-      restartPolicy: Always
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+      volumes:
+        - name: workspace
+          emptyDir:
+            sizeLimit: 1Gi
+      

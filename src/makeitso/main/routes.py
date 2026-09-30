@@ -1,10 +1,10 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 from redis.exceptions import ConnectionError as RedisConnectionError
+from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
 from makeitso.auth.decorators import requires_auth
-from makeitso.extensions import db, job_queue
-from makeitso.main.jobs import add_numbers
+from makeitso.extensions import job_queue, db
 from makeitso.models.stack import Stack
 
 # A blueprint groups related routes; create_app() registers it on the app.
@@ -24,14 +24,21 @@ def index():
 
 
 # Queues the example job and returns its status fragment right away
-@bp.post("/partials/example-job")
-@requires_auth
-def enqueue_example_job():
-    try:
-        job = job_queue.queue.enqueue(add_numbers, 2, 3)
-    except RedisConnectionError:
-        return render_template("main/_job_status.html", job=None)
-    return render_template("main/_job_status.html", job=job)
+# @bp.post("/partials/example-job")
+# @requires_auth
+# def enqueue_example_job():
+#     commit_sha = request.form.get("commit_sha")
+#     stack = db.session.query(Stack).filter_by(repository="makeitso").first()
+
+#     try:
+#         job = Job.fetch(commit_sha, connection=job_queue.queue.connection)
+#     except NoSuchJobError:
+#         job = job_queue.queue.enqueue(
+#             run_deployment, commit_sha, stack, job_id=commit_sha
+#         )
+#     except RedisConnectionError:
+#         return render_template("main/_job_status.html", job=None)
+#     return render_template("main/_job_status.html", job=job)
 
 
 # Polled by HTMX to refresh the job's status until it finishes
