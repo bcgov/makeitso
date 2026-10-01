@@ -51,6 +51,12 @@ class Stack(db.Model):
             "Boolean value indicates whether this stack should automatically deploy to the target"
         ),
     )
+    allow_failures: so.Mapped[list[str]] = so.mapped_column(
+        sa.JSON,
+        default=list,
+        server_default="[]",
+        comment="Check names from engage.yaml's ci.allow_failures at the branch head, set on sync",
+    )
     archived_at: so.Mapped[datetime | None] = so.mapped_column(
         sa.DateTime(timezone=True),
         comment=(
