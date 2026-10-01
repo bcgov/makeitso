@@ -6,6 +6,7 @@ DB_NAME := mis
 
 HTMX_VERSION := 2.0.11
 ALPINE_VERSION := 3.17.4
+BC_SANS_VERSION := 2.1.2
 VENDOR_DIR := src/makeitso/static/vendor
 
 .PHONY: help
@@ -129,3 +130,7 @@ vendor:
 	mkdir -p $(VENDOR_DIR)/htmx $(VENDOR_DIR)/alpinejs
 	curl -fsSL https://cdn.jsdelivr.net/npm/htmx.org@$(HTMX_VERSION)/dist/htmx.min.js -o $(VENDOR_DIR)/htmx/htmx.min.js
 	curl -fsSL https://cdn.jsdelivr.net/npm/@alpinejs/csp@$(ALPINE_VERSION)/dist/cdn.min.js -o $(VENDOR_DIR)/alpinejs/alpine.min.js
+	mkdir -p $(VENDOR_DIR)/bc-sans
+	for f in fonts/BCSans-Regular.woff2 fonts/BCSans-Bold.woff2 LICENSE_OFL.txt; do \
+		curl -fsSL https://cdn.jsdelivr.net/npm/@bcgov/bc-sans@$(BC_SANS_VERSION)/$$f -o $(VENDOR_DIR)/bc-sans/$$(basename $$f); \
+	done
