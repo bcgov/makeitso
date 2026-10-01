@@ -4,6 +4,7 @@ from makeitso.deploys.routes import bp as deploys_bp
 from makeitso.stacks.views.delete import DeleteStackView
 from makeitso.stacks.views.detail import StackCommitsView, StackDetailView
 from makeitso.stacks.views.new import NewStackView
+from makeitso.stacks.views.settings import DeleteEnvVarView, StackLockView, StackSettingsView
 
 bp = Blueprint("stacks", __name__)
 
@@ -11,5 +12,11 @@ bp.add_url_rule("/new", view_func=NewStackView.as_view("new_stack"))
 bp.add_url_rule("/<int:stack_id>", view_func=StackDetailView.as_view("detail"))
 bp.add_url_rule("/<int:stack_id>/commits", view_func=StackCommitsView.as_view("commits"))
 bp.add_url_rule("/<int:stack_id>/delete", view_func=DeleteStackView.as_view("delete"))
+bp.add_url_rule("/<int:stack_id>/settings/lock", view_func=StackLockView.as_view("lock"))
+bp.add_url_rule("/<int:stack_id>/settings", view_func=StackSettingsView.as_view("settings"))
+bp.add_url_rule(
+    "/<int:stack_id>/settings/env/<int:env_var_id>/delete",
+    view_func=DeleteEnvVarView.as_view("delete_env_var"),
+)
 
 bp.register_blueprint(deploys_bp, url_prefix="/<int:stack_id>/deploys/")

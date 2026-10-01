@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from github import GithubException
-from wtforms import Field, StringField, SubmitField
-from wtforms.validators import DataRequired, ValidationError
+from wtforms import BooleanField, Field, StringField, TextAreaField
+from wtforms.validators import DataRequired, Regexp, ValidationError
 
 from makeitso.extensions import db
 from makeitso.github import GitHubRepo, client_for_current_user
@@ -73,3 +73,34 @@ class NewStackForm(FlaskForm):
         return GitHubRepo(
             client_for_current_user(), f"{self.organization.data}/{self.repository.data}"
         )
+
+
+def _strip(value: str | None) -> str | None:
+    return value.strip() if value else value
+
+
+class LockForm(FlaskForm):
+    locked = BooleanField("Lock this stack")
+    lock_reason = TextAreaField(
+        "Reason", description="Shown on the stack page. Needed when locking.", filters=[_strip]
+    )
+
+    def validate_lock_reason(self, field: Field) -> None:
+        if self.locked.data and not field.data:
+            raise ValidationError("Give a reason for locking the stack")
+
+
+class EnvVarForm(FlaskForm):
+    key = StringField(
+        "Name",
+        filters=[_strip],
+        validators=[
+            DataRequired(),
+            # What a shell accepts: letters, digits and _, not starting with a digit
+            Regexp(
+                r"^[A-Za-z_][A-Za-z0-9_]*$",
+                message="Letters, digits and _, not starting with a digit",
+            ),
+        ],
+    )
+    value = StringField("Value")
