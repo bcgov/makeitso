@@ -1,8 +1,33 @@
-{% from 'bootstrap5/form.html' import render_form %}
 {% extends "base.html" %}
-{% set title = "New Stack" %}
+{% from "bootstrap5/form.html" import render_field %}
+
+{% set title = "New stack" %}
 
 {% block content %}
-    <h1>Create Stack</h1>
-    {{ render_form(form, novalidate=True) }}
+    <div class="mx-auto" style="max-width: 64rem">
+        <h1 class="h3 mb-1">New stack</h1>
+        <p class="text-muted mb-4">
+            A stack is one repository, one branch and one environment to deploy to.
+            Its commits are loaded from GitHub as soon as it's created.
+        </p>
+
+        <form method="post" class="card border-0 bg-body-tertiary" novalidate>
+            <div class="card-body p-4">
+                {{ form.hidden_tag() }}
+                <div class="row g-3">
+                    <div class="col-sm-6">{{ render_field(form.organization, placeholder="e.g. bcgov") }}</div>
+                    <div class="col-sm-6">{{ render_field(form.repository, placeholder="e.g. makeitso") }}</div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-sm-6">{{ render_field(form.branch, placeholder="e.g. main") }}</div>
+                    <div class="col-sm-6">{{ render_field(form.environment, placeholder="e.g. dev") }}</div>
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">Create stack</button>
+                    <a class="btn btn-link" href="{{ url_for('main.index') }}">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
 {% endblock %}
