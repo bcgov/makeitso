@@ -2,7 +2,7 @@ import os
 import hmac
 import hashlib
 import json
-from flask import Blueprint, request, abort, current_app, redirect, render_template, session, url_for
+from flask import Blueprint, request, abort
 
 bp = Blueprint("github", __name__)
 GITHUB_SECRET = os.environ.get("GITHUB_SECRET", "").encode()
