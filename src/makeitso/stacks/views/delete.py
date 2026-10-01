@@ -12,7 +12,7 @@ class DeleteStackView(MethodView):
     @requires_auth
     def post(self, stack_id: int):
         """Delete a stack by archiving it, so its history stays in the database"""
-        stack = db.first_or_404(Stack.active().where(Stack.id == stack_id))
+        stack = Stack.active_or_404(stack_id)
         stack.archived_at = datetime.now(UTC)
         db.session.commit()
         flash(
