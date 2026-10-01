@@ -1,4 +1,4 @@
-from flask import redirect, render_template
+from flask import redirect, render_template, url_for
 from flask.views import MethodView
 
 from makeitso.auth.decorators import requires_auth
@@ -31,6 +31,6 @@ class NewStackView(MethodView):
             # Load the stack's commits in the background
             enqueue_sync(stack.id)
 
-            return redirect("/")
+            return redirect(url_for("stacks.detail", stack_id=stack.id))
 
         return render_template("stacks/new.html", form=self.form)

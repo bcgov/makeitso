@@ -1,0 +1,3 @@
+{#- How much of the log the page has; the log box sends it with each poll, and each answer replaces it -#}
+<input type="hidden" id="log-offset" name="offset" value="{{ deploy.output|length }}"
+       {% if oob %}hx-swap-oob="true"{% endif %}>

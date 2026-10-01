@@ -1,0 +1,13 @@
+{# Grey placeholder rows shaped like commit rows, shown while a sync loads the commits #}
+{% for _ in range(3) %}
+    <li class="d-flex align-items-center gap-3 py-3 border-bottom placeholder-wave" aria-hidden="true">
+        <span class="placeholder rounded" style="width: 40px; height: 40px"></span>
+        <span style="width: 12rem"><span class="placeholder col-7"></span></span>
+        <span class="placeholder rounded-circle" style="width: 1.75em; height: 1.75em"></span>
+        <span class="flex-grow-1">
+            <span class="placeholder col-6 d-block mb-2"></span>
+            <span class="placeholder placeholder-sm col-3 d-block"></span>
+        </span>
+        <span class="placeholder rounded" style="width: 7rem; height: 2.4rem"></span>
+    </li>
+{% endfor %}

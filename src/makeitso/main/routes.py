@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template
 
+from makeitso.deploys.queries import current_deploy, last_successful_deploy, previous_deploys
 from makeitso.extensions import db
 from makeitso.models.stack import Stack
 
@@ -15,5 +16,14 @@ def healthz():
 # Public so logging out lands here instead of bouncing straight back through GitHub login
 @bp.get("/")
 def index():
-    stacks = db.session.scalars(Stack.active()).all()
-    return render_template("main/index.html", stacks=stacks)
+    stacks = db.session.scalars(Stack.active().order_by(Stack.repository, Stack.environment)).all()
+    # Each stack's state for the list: a running deploy, the latest finished one, and what's live
+    states = {
+        stack.id: {
+            "running": current_deploy(stack.id),
+            "latest": next(iter(previous_deploys(stack.id, limit=1)), None),
+            "live": last_successful_deploy(stack.id),
+        }
+        for stack in stacks
+    }
+    return render_template("main/index.html", stacks=stacks, states=states)

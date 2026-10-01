@@ -1,0 +1,42 @@
+{% from "bootstrap5/utils.html" import render_icon %}
+<li class="d-flex align-items-center gap-3 py-3 border-bottom">
+    {% if commit.author_avatar_url %}
+        <img src="{{ commit.author_avatar_url }}" alt="" width="40" height="40" class="rounded">
+    {% else %}
+        <div class="rounded bg-secondary-subtle" style="width: 40px; height: 40px"></div>
+    {% endif %}
+
+    <div style="width: 12rem">
+        {% if commit.author_url %}
+            <a href="{{ commit.author_url }}" target="_blank" rel="noopener">{{ commit.author_name }}</a>
+            <div class="small text-muted">{{ commit.author_login }}</div>
+        {% else %}
+            {{ commit.author_name }}
+        {% endif %}
+    </div>
+
+    <div style="width: 2.5rem">
+        {% include "stacks/_checks.html" %}
+    </div>
+
+    <div>
+        <a href="{{ commit.url }}" target="_blank" rel="noopener"
+           class="fw-semibold">{{ commit.commit_message }}</a>
+        {% if commit.pull_request_number %}
+            <a href="https://github.com/{{ stack.organization }}/{{ stack.repository }}/pull/{{ commit.pull_request_number }}"
+               target="_blank" rel="noopener" class="text-muted">#{{ commit.pull_request_number }}</a>
+        {% endif %}
+        <div class="small text-muted">
+            <code>{{ commit.short_sha }}</code> · {{ commit.committed_at.strftime("%b %d, %Y %H:%M") }}
+        </div>
+    </div>
+    {% if show_deploy %}
+        <div class="ms-auto">
+            <a class="btn btn-primary d-inline-flex align-items-center gap-2 px-3"
+               href="{{ url_for('stacks.deploys.new', stack_id=stack.id, commit_sha=commit.commit_sha, emergency=1 if emergency else None) }}">
+                {{ render_icon("rocket-takeoff") }}
+                Deploy
+            </a>
+        </div>
+    {% endif %}
+</li>

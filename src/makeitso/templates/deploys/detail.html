@@ -1,8 +1,58 @@
 {% extends "base.html" %}
+{% from "bootstrap5/utils.html" import render_icon %}
+{% from "deploys/_macros.html" import commit_range, deployed_by, status_badge %}
+{% from "stacks/_tabs.html" import stack_tabs %}
 
-{% set title = "Deploy " ~ deploy_id %}
+{% set stack = deploy.stack %}
+{% set title = "Deploy " ~ deploy.commit.short_sha %}
+
+{% block navbar_brand_url %}{{ url_for('stacks.detail', stack_id=stack.id) }}{% endblock %}
+{% block navbar_brand %}{% include "stacks/_navbar_brand.html" %}{% endblock %}
 
 {% block content %}
-    <h1>Deploy {{ deploy_id }}</h1>
-    {% include "deploys/_job_status.html" %}
+    {{ stack_tabs(stack, "deploys") }}
+    <div class="d-flex align-items-center gap-2 mb-2">
+        <h1 class="h4 mb-0">
+            Deploy <a href="{{ deploy.commit.url }}" target="_blank" rel="noopener"
+                      title="View commit on GitHub"><code>{{ deploy.commit.short_sha }}</code></a>
+            to {{ stack.environment }}
+        </h1>
+        {{ status_badge(deploy.status, live=True) }}
+        {% include "deploys/_timer.html" %}
+    </div>
+    <p class="mb-2">{{ deploy.commit.commit_message }}</p>
+    {% set details = [
+        ("person", "Author", deploy.commit.author_name),
+        ("clock", "Started", deploy.started_at.strftime("%b %d, %Y %H:%M")),
+        ("person-check", "Deployed by", deployed_by(deploy)),
+    ] %}
+    <ul class="list-inline small text-muted mb-4">
+        {% for icon, label, value in details %}
+            <li class="list-inline-item me-4 d-inline-flex align-items-center gap-1">
+                {{ render_icon(icon) }} {{ label }}: <span class="text-body">{{ value }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+    {% if deploy.deployed_with_bypass %}
+        <div class="alert alert-warning">Deployed in emergency mode: some CI checks had failed</div>
+    {% endif %}
+    {{ commit_range(stack, deploy.since_commit or deploy.commit, deploy.commit) }}
+    {% include "deploys/_progress.html" %}
+    {#
+      The saved output from the database. The box asks for new text right away ("load") and, while the
+      deploy runs, every second; each answer is appended. The server answers 286 once the deploy has
+      finished, which stops the polling
+      Alpine keeps the newest line in view while the reader is at the bottom (`follow`); scrolling up to
+      read stops that, scrolling back down turns it on again. "Near the bottom" is within 40px
+    #}
+    <div id="deploy-log-box" class="deploy-log"
+         x-data="{ follow: true }"
+         @scroll="follow = $el.scrollHeight - $el.scrollTop - $el.clientHeight < 40"
+         x-on:htmx:after-swap="follow && $el.scrollTo(0, $el.scrollHeight)"
+         hx-get="{{ url_for('stacks.deploys.log', stack_id=stack.id, deploy_id=deploy.id) }}"
+         hx-trigger="load{% if deploy.status.name == 'IN_PROGRESS' %}, every 1s{% endif %}"
+         hx-include="#log-offset" hx-target="#deploy-log"
+         hx-swap="beforeend"><pre id="deploy-log">{{ deploy.output }}</pre></div>
+    {% include "deploys/_log_offset.html" %}
+    <a class="btn btn-primary mt-3" href="{{ url_for('stacks.detail', stack_id=stack.id) }}">Back to commits</a>
 {% endblock %}

@@ -15,6 +15,7 @@ Every key is optional; a missing file or key uses the defaults below. Example:
         - Dependabot
 """
 
+import re
 from typing import Any
 
 import yaml
@@ -23,6 +24,14 @@ from pydantic import BaseModel, ConfigDict, PositiveInt, ValidationError, model_
 from makeitso.engage.errors import EngageConfigError
 
 CONFIG_FILE = "engage.yaml"
+
+
+def config_files(environment: str) -> list[str]:
+    """File names to try, first one found wins: engage.<environment>.yaml, then engage.yaml.
+    E.g. engage.prod.yaml for a prod stack"""
+    if re.fullmatch(r"[\w-]+", environment):
+        return [f"engage.{environment}.yaml", CONFIG_FILE]
+    return [CONFIG_FILE]
 
 
 class _Section(BaseModel):
@@ -57,24 +66,25 @@ class EngageConfig(_Section):
     ci: CIConfig = CIConfig()
 
 
-def parse_config(text: str) -> EngageConfig:
+def parse_config(text: str, file_name: str = CONFIG_FILE) -> EngageConfig:
+    """`file_name` is only used in error messages"""
     try:
         # safe_load only builds plain data; yaml.load could run code from the file
         data = yaml.safe_load(text)
     except yaml.YAMLError as exc:
-        raise EngageConfigError(f"{CONFIG_FILE} is not valid YAML: {exc}") from exc
+        raise EngageConfigError(f"{file_name} is not valid YAML: {exc}") from exc
     try:
         # An empty file loads as None
         return EngageConfig.model_validate({} if data is None else data)
     except ValidationError as exc:
-        raise EngageConfigError(_describe(exc)) from exc
+        raise EngageConfigError(_describe(exc, file_name)) from exc
 
 
-def _describe(exc: ValidationError) -> str:
+def _describe(exc: ValidationError, file_name: str) -> str:
     """Pydantic's errors as one readable line, e.g. "deploy.timeout: Input should be ..." """
     problems = []
     for error in exc.errors():
         where = ".".join(str(part) for part in error["loc"]) or "top level"
         message = "unknown setting" if error["type"] == "extra_forbidden" else error["msg"]
         problems.append(f"{where}: {message}")
-    return f"Invalid {CONFIG_FILE}: " + "; ".join(problems)
+    return f"Invalid {file_name}: " + "; ".join(problems)

@@ -1,7 +1,11 @@
-{# While a sync is active, reload this list every 2s; the finished list has no hx-get, so polling stops #}
+{% from "bootstrap5/utils.html" import render_icon %}
+{% from "deploys/_macros.html" import bypass_badge, deployed_by, status_badge %}
+{# While a sync or a deploy runs, reload this every 2s; once both are done there's no hx-get, so polling stops #}
 <div id="commits"
-     {% if sync.active %}class="syncing"
-     hx-get="{{ url_for('stacks.commits', stack_id=stack.id) }}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+     {% if sync.active or current_deploy %}
+     hx-get="{{ url_for('stacks.commits', stack_id=stack.id, emergency=1 if emergency else None) }}" hx-trigger="every 2s" hx-swap="outerHTML"
+     {% endif %}
+     {% if sync.active %}class="syncing"{% endif %}>
     {% if sync.status == "queued" %}
         <p class="small text-muted mb-2">Sync queued, waiting for a background worker…</p>
     {% elif sync.active %}
@@ -12,47 +16,80 @@
         <div class="alert alert-danger">{{ sync.error }}</div>
     {% endif %}
 
-    <ul class="list-unstyled">
-        {% for commit in commits %}
-            <li class="d-flex align-items-center gap-3 py-3 border-bottom">
-                {% if commit.author_avatar_url %}
-                    <img src="{{ commit.author_avatar_url }}" alt="" width="40" height="40" class="rounded">
+    {% if current_deploy %}
+        {% set deploy = current_deploy %}
+        <section class="border-top pt-3 mb-4">
+            <h2 class="h5">Currently deploying</h2>
+            <div class="alert alert-info d-flex justify-content-between align-items-center">
+                <span>Deploying <code>{{ deploy.commit.short_sha }}</code>, started by {{ deployed_by(deploy) }}…</span>
+                <a href="{{ url_for('stacks.deploys.detail', stack_id=stack.id, deploy_id=deploy.id) }}">View live log</a>
+            </div>
+            {% include "deploys/_progress.html" %}
+            <ul class="list-unstyled">
+                {% for commit in deploying_commits %}
+                    {% with show_deploy=false %}{% include "stacks/_commit_row.html" %}{% endwith %}
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    <section class="border-top pt-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h5 mb-0">Undeployed commits</h2>
+            {% if emergency %}
+                <a class="btn btn-sm btn-warning d-inline-flex align-items-center gap-2"
+                   href="{{ url_for('stacks.detail', stack_id=stack.id) }}">
+                    {{ render_icon("exclamation-triangle-fill") }} Exit emergency mode
+                </a>
+            {% else %}
+                <a class="btn btn-sm btn-outline-warning d-inline-flex align-items-center gap-2"
+                   href="{{ url_for('stacks.detail', stack_id=stack.id, emergency=1) }}"
+                   title="Deploy commits even if their CI checks failed">
+                    {{ render_icon("exclamation-triangle") }} Emergency mode
+                </a>
+            {% endif %}
+        </div>
+        <ul class="list-unstyled">
+            {% if sync.active %}
+                {% include "stacks/_commit_skeleton.html" %}
+            {% else %}
+                {% for commit in undeployed_commits %}
+                    {# No Deploy buttons while a deploy runs or the stack is locked #}
+                    {% with show_deploy=not (current_deploy or stack.locked) %}{% include "stacks/_commit_row.html" %}{% endwith %}
                 {% else %}
-                    <div class="rounded bg-secondary-subtle" style="width: 40px; height: 40px"></div>
-                {% endif %}
+                    <li class="text-muted py-3">Nothing to deploy. Press Sync to check GitHub for new commits.</li>
+                {% endfor %}
+            {% endif %}
+        </ul>
+    </section>
 
-                <div style="width: 12rem">
-                    {% if commit.author_url %}
-                        <a href="{{ commit.author_url }}" target="_blank" rel="noopener">{{ commit.author_name }}</a>
-                        <div class="small text-muted">{{ commit.author_login }}</div>
-                    {% else %}
-                        {{ commit.author_name }}
+    <section class="border-top pt-3">
+        <div class="d-flex justify-content-between align-items-baseline">
+            <h2 class="h5">Previous deploys</h2>
+            <a href="{{ url_for('stacks.deploys.list', stack_id=stack.id) }}">All deploys</a>
+        </div>
+        <ul class="list-unstyled">
+            {% for deploy in previous_deploys %}
+                <li class="d-flex align-items-center gap-3 py-2 border-bottom">
+                    {{ status_badge(deploy.status) }}
+                    <span class="flex-grow-1"><a target="_blank" rel="noopener" href="https://github.com/{{ stack.organization }}/{{ stack.repository }}/commit/{{ deploy.commit.commit_sha }}"><code>{{ deploy.commit.short_sha }}</code></a> {{ deploy.commit.commit_message }}</span>
+                    {{ bypass_badge(deploy) }}
+                    <span class="small text-muted d-inline-flex align-items-center gap-3 text-nowrap">
+                        <span title="Deployed by">{{ render_icon("person-check") }} {{ deployed_by(deploy) }}</span>
+                        <span title="Started">{{ render_icon("clock") }} {{ deploy.started_at.strftime("%b %d, %Y %H:%M") }}</span>
+                        <span title="Took">{{ render_icon("stopwatch") }} {{ deploy.elapsed }}</span>
+                    </span>
+                    <a class="text-nowrap text-decoration-none" href="{{ url_for('stacks.deploys.detail', stack_id=stack.id, deploy_id=deploy.id) }}">{{ render_icon("terminal") }} View log</a>
+                    {% if not (current_deploy or stack.locked) and deploy.id in redeployable %}
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="{{ url_for('stacks.deploys.new', stack_id=stack.id, commit_sha=deploy.commit.commit_sha, emergency=1 if emergency else None) }}">
+                            {{ "Redeploy" if deploy.status.name == "SUCCEEDED" else "Retry" }}
+                        </a>
                     {% endif %}
-                </div>
-
-                <div style="width: 2.5rem">
-                    {% include "stacks/_checks.html" %}
-                </div>
-
-                <div>
-                    <a href="{{ commit.url }}" target="_blank" rel="noopener"
-                       class="fw-semibold">{{ commit.commit_message }}</a>
-                    {% if commit.pull_request_number %}
-                        <a href="https://github.com/{{ stack.organization }}/{{ stack.repository }}/pull/{{ commit.pull_request_number }}"
-                           target="_blank" rel="noopener" class="text-muted">#{{ commit.pull_request_number }}</a>
-                    {% endif %}
-                    <div class="small text-muted">
-                        <code>{{ commit.short_sha }}</code> · {{ commit.committed_at.strftime("%b %d, %Y %H:%M") }}
-                    </div>
-                </div>
-                <div>
-                  <a class="btn btn-sm btn-primary border-light d-inline-flex align-items-center gap-2" href="{{ url_for('stacks.deploys.new', stack_id=stack.id, commit_sha=commit.commit_sha) }}">
-                    Deploy
-                  </a>
-                </div>
-            </li>
-        {% else %}
-            <li class="text-muted py-3">No commits yet. Press Sync to load them from GitHub.</li>
-        {% endfor %}
-    </ul>
+                </li>
+            {% else %}
+                <li class="text-muted py-3">No deploys yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
 </div>

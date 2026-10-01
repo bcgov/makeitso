@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "bootstrap5/form.html" import render_field %}
+{% from "stacks/_tabs.html" import stack_tabs %}
+
+{% set title = "Settings " ~ stack.repository ~ " " ~ stack.environment %}
+
+{% block navbar_brand_url %}{{ url_for('stacks.detail', stack_id=stack.id) }}{% endblock %}
+{% block navbar_brand %}{% include "stacks/_navbar_brand.html" %}{% endblock %}
+
+{% block content %}
+    {{ stack_tabs(stack, "settings") }}
+
+    <h1 class="h4 pb-2">Lock deploys</h1>
+    <p class="text-muted">
+        A locked stack can't be deployed until it's unlocked. A deploy that's already
+        running keeps going.
+    </p>
+    <form method="post" action="{{ url_for('stacks.lock', stack_id=stack.id) }}" class="mb-5" style="max-width: 40rem" novalidate>
+        {{ lock_form.hidden_tag() }}
+        {{ render_field(lock_form.locked) }}
+        {{ render_field(lock_form.lock_reason, rows=2, placeholder="e.g. Release freeze until Monday") }}
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+
+    <h1 class="h4 pb-2">Environment variables</h1>
+    <p class="text-muted">
+        Passed to the deploy script. Stored as plain text and visible to everyone who can log in.
+    </p>
+
+    <table class="table align-middle">
+        <thead>
+        <tr><th>Name</th><th>Value</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for env_var in env_vars %}
+            <tr>
+                <td><code>{{ env_var.key }}</code></td>
+                <td><code>{{ env_var.value }}</code></td>
+                <td class="text-end">
+                    <form method="post" class="d-inline"
+                          action="{{ url_for('stacks.delete_env_var', stack_id=stack.id, env_var_id=env_var.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="3" class="text-muted">No environment variables yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <form method="post" action="{{ url_for('stacks.settings', stack_id=stack.id) }}" class="row g-2 align-items-start" novalidate>
+        {{ env_var_form.hidden_tag() }}
+        <div class="col-md-4">{{ render_field(env_var_form.key, placeholder="NAMESPACE_PREFIX") }}</div>
+        <div class="col-md-6">{{ render_field(env_var_form.value) }}</div>
+        <div class="col-md-2 pt-md-4 mt-md-2">
+            <button type="submit" class="btn btn-primary w-100">Save</button>
+        </div>
+    </form>
+
+{% endblock %}

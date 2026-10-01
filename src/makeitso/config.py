@@ -1,10 +1,6 @@
 import os
 import urllib.parse
 
-from flask.cli import load_dotenv
-
-load_dotenv()
-
 
 class Config:
     # Production-safe defaults shared by every environment
@@ -24,6 +20,9 @@ class Config:
     GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_APP_CLIENT_SECRET")
     # Used by background jobs, which have no logged-in user
     GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+
+    # Where deploys check out code; Helm mounts /workspace
+    DEPLOY_WORKSPACE = os.environ.get("DEPLOY_WORKSPACE", "/tmp/makeitso-workspace")
 
     DB_USER = os.environ.get("DB_USER", "postgres")
     SQLALCHEMY_DATABASE_URI = (

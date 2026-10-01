@@ -27,6 +27,11 @@ FROM python:3.14-slim-trixie
 # Python executable must be the same, e.g., using `python:3.11-slim-trixie`
 # will fail.
 
+# git for the deploy checkout (bin/checkout.sh); tools a repo's deploy script needs are its own choice
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 # Setup a non-root user
 RUN groupadd --system --gid 1001 nonroot \
     && useradd --system --gid 1001 --uid 1001 --create-home nonroot

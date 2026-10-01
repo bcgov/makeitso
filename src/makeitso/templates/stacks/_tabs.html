@@ -1,0 +1,16 @@
+{% macro stack_tabs(stack, active) %}
+    {% set tabs = [
+        ("commits", "Commits", "stacks.detail"),
+        ("deploys", "Deploys", "stacks.deploys.list"),
+        ("settings", "Settings", "stacks.settings"),
+    ] %}
+    <ul class="nav nav-tabs mb-4">
+        {% for key, label, endpoint in tabs %}
+            <li class="nav-item">
+                <a class="nav-link{% if key == active %} active{% endif %}"
+                   {% if key == active %}aria-current="page"{% endif %}
+                   href="{{ url_for(endpoint, stack_id=stack.id) }}">{{ label }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endmacro %}

@@ -31,6 +31,8 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.app.githubAppSecretName | quote }}
                   key: ghToken
+            - name: DEPLOY_WORKSPACE
+              value: /workspace
           resources:
             requests:
               cpu: 100m

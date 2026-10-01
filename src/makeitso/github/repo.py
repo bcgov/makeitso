@@ -54,6 +54,17 @@ class GitHubRepo:
             return False
         return True
 
+    def file_content(self, path: str, ref: str) -> str | None:
+        """A file's text at `ref` (a sha or branch); None if it's missing or is a folder"""
+        try:
+            content = self.repo.get_contents(path, ref=ref)
+        except UnknownObjectException:
+            return None
+        # A folder comes back as a list of its files
+        if isinstance(content, list):
+            return None
+        return content.decoded_content.decode()
+
     def commits(self, branch: str) -> list[GitHubCommit]:
         """The latest commits that landed on `branch`, the newest first
 

@@ -31,6 +31,12 @@ ci:
 | `review.checklist` | list of text | `[]` | Items to confirm before deploying |
 | `ci.allow_failures` | list of text | `[]` | Check names that are shown but don't block a deploy |
 
+## One file per environment
+
+A repo can have a file per stack environment:
+`engage.prod.yaml` is used by the `prod` stack, and stacks without their own file use `engage.yaml`.
+The first file found is used as a whole; files aren't merged.
+
 ## Validation
 
 Anything present but wrong is an error, with a message pointing at the setting:

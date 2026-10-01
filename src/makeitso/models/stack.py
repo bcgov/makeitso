@@ -51,6 +51,12 @@ class Stack(db.Model):
             "Boolean value indicates whether this stack should automatically deploy to the target"
         ),
     )
+    allow_failures: so.Mapped[list[str]] = so.mapped_column(
+        sa.JSON,
+        default=list,
+        server_default="[]",
+        comment="Check names from engage.yaml's ci.allow_failures at the branch head, set on sync",
+    )
     archived_at: so.Mapped[datetime | None] = so.mapped_column(
         sa.DateTime(timezone=True),
         comment=(
@@ -62,6 +68,11 @@ class Stack(db.Model):
     commits: so.Mapped[list[Commit]] = so.relationship(back_populates="stack")
 
     @classmethod
-    def active(cls) -> sa.Select[tuple[Self]]:
+    def active(cls) -> sa.Select[Self]:
         """Select stacks that aren't archived; deleting a stack archives it"""
         return sa.select(cls).where(cls.archived_at.is_(None))
+
+    @classmethod
+    def active_or_404(cls, stack_id: int) -> Self:
+        """The stack for a page; a 404 if it doesn't exist or was deleted"""
+        return db.first_or_404(cls.active().where(cls.id == stack_id))
