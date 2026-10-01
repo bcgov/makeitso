@@ -48,6 +48,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.app.githubAppSecretName | quote }}
                   key: clientSecret
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.githubAppSecretName | quote }}
+                  key: ghToken
           readinessProbe:
             httpGet:
               path: /healthz
