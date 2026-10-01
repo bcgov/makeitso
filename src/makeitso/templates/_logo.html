@@ -1,18 +1,21 @@
 {#
-  The logo drawn inline, so CSS can move the rocket on its own: on hover it flies out of the square
+  The logo drawn inline, so CSS can move the ship on its own: on hover it flies out of the square
   (see .app-logo in theme.css). Same drawing as static/img/logo.svg (the favicon); keep them in sync
 #}
 {% macro logo(size) %}
     <svg class="app-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="{{ size }}"
          height="{{ size }}" aria-hidden="true" focusable="false">
         <rect width="64" height="64" rx="14" fill="#003366"/>
-        <g class="app-logo-rocket">
+        <g class="app-logo-ship">
             <g transform="rotate(45 32 32)">
-                <path d="M28 43 32 55 36 43Z" fill="#fcba19"/>
-                <path d="M30 43 32 49 34 43Z" fill="#fff4d6"/>
-                <path d="M24 33 18 44 25 42Z M40 33 46 44 39 42Z" fill="#fcba19"/>
-                <path d="M32 9C40 17 42 29 39.5 43H24.5C22 29 24 17 32 9Z" fill="#fff" stroke="#003366" stroke-width="1.5"/>
-                <circle cx="32" cy="26" r="4.2" fill="#003366" stroke="#fcba19" stroke-width="2"/>
+                <rect x="18.5" y="31" width="5" height="24" rx="2.5" fill="#fff" stroke="#003366" stroke-width="1.5"/>
+                <rect x="40.5" y="31" width="5" height="24" rx="2.5" fill="#fff" stroke="#003366" stroke-width="1.5"/>
+                <path d="M18.5 35V33.5A2.5 2.5 0 0 1 23.5 33.5V35Z M40.5 35V33.5A2.5 2.5 0 0 1 45.5 33.5V35Z" fill="#fcba19"/>
+                <path d="M29 39 22.5 43V47.5L29 44.5Z M35 39 41.5 43V47.5L35 44.5Z" fill="#fff"/>
+                <ellipse cx="32" cy="42" rx="4.5" ry="11" fill="#fff" stroke="#003366" stroke-width="1.5"/>
+                <rect x="30" y="26" width="4" height="8" fill="#fff" stroke="#003366" stroke-width="1.5"/>
+                <circle cx="32" cy="20" r="11" fill="#fff" stroke="#003366" stroke-width="1.5"/>
+                <circle cx="32" cy="20" r="2.5" fill="#fcba19"/>
             </g>
         </g>
     </svg>
