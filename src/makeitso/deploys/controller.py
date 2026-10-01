@@ -1,7 +1,6 @@
 import datetime
 import os
 import subprocess
-import time
 
 from rq import Callback
 from rq.exceptions import NoSuchJobError
@@ -17,11 +16,7 @@ from makeitso.extensions import job_queue, db
 
 
 def deployment_task(commit_sha: str, stack_id: int) -> int:
-    stack = db.session.scalar(
-        sa.select(Stack).filter_by(
-            id=stack_id
-        )
-    )
+    stack = db.session.scalar(sa.select(Stack).filter_by(id=stack_id))
     print(
         f"Starting deployment for commit {commit_sha} on stack {stack.organization}/{stack.repository}"
     )
@@ -35,15 +30,14 @@ def deployment_task(commit_sha: str, stack_id: int) -> int:
             "COMMIT_SHA": commit_sha,
             "STACK_ORG": stack.organization,
             "STACK_REPO": stack.repository,
-        }
+        },
     )
 
     while proc.poll() is None:
-        time.sleep(1)
-        lines = proc.stdout.readlines()
-        if lines and len(lines) > 0:
+        line = proc.stdout.readline()
+        if line:
             job = Job.fetch(commit_sha, connection=job_queue.queue.connection)
-            job.meta["output"] = job.meta.get("output", "") + "\n".join(lines)
+            job.meta["output"] = job.meta.get("output", "") + line
             job.save_meta()
 
     if proc.returncode != 0:
