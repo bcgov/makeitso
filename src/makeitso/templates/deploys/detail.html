@@ -1,5 +1,8 @@
+{% extends "base.html" %}
 
+{% set title = "Deploy " ~ deploy_id %}
 
-<p>Deploy {{ deploy_id }}</p>
-
-{% include "deploys/_job_status.html" %}
+{% block content %}
+    <h1>Deploy {{ deploy_id }}</h1>
+    {% include "deploys/_job_status.html" %}
+{% endblock %}

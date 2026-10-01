@@ -29,6 +29,7 @@ class Deploy(db.Model):
     )
     started_at: so.Mapped[datetime] = so.mapped_column(
         sa.DateTime(timezone=True),
+        server_default=sa.func.now(),
         comment="The datetime in UTC that the deploy attempt was started",
     )
     ended_at: so.Mapped[datetime | None] = so.mapped_column(
