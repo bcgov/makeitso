@@ -37,7 +37,8 @@ def login():
     )
 
 
-@bp.route("/logout")
+# POST with the CSRF token, so another site can't log users out with a link or an <img>
+@bp.post("/logout")
 def logout():
     """
     Logging out **from this app only**

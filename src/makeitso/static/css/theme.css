@@ -1,4 +1,21 @@
+@font-face {
+  font-family: "BC Sans";
+  src: url("../vendor/bc-sans/BCSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "BC Sans";
+  src: url("../vendor/bc-sans/BCSans-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  --bs-body-font-family: "BC Sans", "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --bc-primary-blue: #003366;
   --bc-bg-blue: #38598a;
   --bc-link-blue: #1a5a96;
@@ -9,8 +26,11 @@
   --bc-green: #2e8540;
 
   --bs-body-color: var(--bc-text);
+  --bs-link-color: var(--bc-link-blue);
   --bs-link-color-rgb: 26, 90, 150;
+  --bs-link-hover-color: var(--bc-primary-blue);
   --bs-link-hover-color-rgb: 0, 51, 102;
+  --bs-primary: var(--bc-primary-blue);
   --bs-primary-rgb: 0, 51, 102;
   --bs-danger-rgb: 216, 41, 47;
   --bs-success-rgb: 46, 133, 64;
@@ -26,6 +46,41 @@
   --bs-btn-active-border-color: var(--bc-bg-blue);
   --bs-btn-disabled-bg: var(--bc-primary-blue);
   --bs-btn-disabled-border-color: var(--bc-primary-blue);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--bc-primary-blue);
+  --bs-btn-border-color: var(--bc-primary-blue);
+  --bs-btn-hover-bg: var(--bc-primary-blue);
+  --bs-btn-hover-border-color: var(--bc-primary-blue);
+  --bs-btn-active-bg: var(--bc-primary-blue);
+  --bs-btn-active-border-color: var(--bc-primary-blue);
+}
+
+.btn-warning,
+.btn-outline-warning {
+  --bs-btn-color: var(--bs-warning-text-emphasis);
+  --bs-btn-hover-color: var(--bs-warning-text-emphasis);
+  --bs-btn-active-color: var(--bs-warning-text-emphasis);
+  --bs-btn-border-color: var(--bc-yellow);
+  --bs-btn-hover-bg: var(--bc-yellow);
+  --bs-btn-hover-border-color: var(--bc-yellow);
+  --bs-btn-active-bg: var(--bc-yellow);
+  --bs-btn-active-border-color: var(--bc-yellow);
+}
+
+.btn-warning {
+  --bs-btn-bg: var(--bc-yellow);
+}
+
+.form-check-input:checked {
+  background-color: var(--bc-primary-blue);
+  border-color: var(--bc-primary-blue);
+}
+
+.pagination {
+  --bs-pagination-active-bg: var(--bc-primary-blue);
+  --bs-pagination-active-border-color: var(--bc-primary-blue);
 }
 
 .bc-header {
@@ -67,18 +122,70 @@ body:has(#commits.syncing) #sync-form button {
   opacity: var(--bs-btn-disabled-opacity);
 }
 
-/* While a sync runs, the commits are about to be replaced: dim them and pulse */
-#commits.syncing ul {
-  animation: syncing 1.2s ease-in-out infinite;
+/* Fixed-size log box; Alpine on the box keeps it scrolled to the newest line */
+.deploy-log {
+  height: 60vh;
+  overflow: auto;
+  background: #1e1e1e;
+  border-radius: 0.375rem;
 }
 
-@keyframes syncing {
+.deploy-log pre {
+  margin: 0;
+  padding: 1rem;
+  color: #d4d4d4;
+  white-space: pre-wrap;
+}
+
+/* The logo's rocket, flies out of its square to the top right, and comes back in from the
+   bottom left. Hovering the logo or the navbar brand around it starts it */
+.app-logo {
+  overflow: visible;
+}
+
+.app-logo:hover .app-logo-rocket,
+.navbar-brand:hover .app-logo-rocket {
+  animation: fly-out 1.4s ease-in-out;
+}
+
+@keyframes fly-out {
   0%,
   100% {
-    opacity: 0.6;
+    transform: none;
+    opacity: 1;
   }
 
-  50% {
-    opacity: 0.3;
+  8%,
+  20% {
+    transform: translate(-1px, 1px);
   }
+
+  14%,
+  26% {
+    transform: translate(1px, -1px);
+  }
+
+  45% {
+    transform: translate(40px, -40px);
+    opacity: 1;
+  }
+
+  55% {
+    transform: translate(56px, -56px);
+    opacity: 0;
+  }
+
+  56% {
+    transform: translate(-48px, 48px);
+    opacity: 0;
+  }
+
+  66% {
+    opacity: 1;
+  }
+}
+
+/* The section divider is enough, so the last row has no bottom line */
+#commits section li:last-child {
+  border-bottom: 0 !important;
 }

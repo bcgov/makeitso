@@ -1,3 +1,4 @@
+{% from "_logo.html" import logo %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {# Pages set `title` with {% set title = "..." %} at the top of their template #}
   <title>{% if title %}{{ title }} · {% endif %}makeitso</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
   {{ bootstrap.load_css() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
   <script src="{{ url_for('static', filename='vendor/htmx/htmx.min.js') }}" defer></script>
@@ -13,8 +15,10 @@
 <body>
   <nav class="navbar bg-primary bc-header" data-bs-theme="dark">
     <div class="container">
-      <a class="navbar-brand" href="{% block navbar_brand_url %}{{ url_for('main.index') }}{% endblock %}">
-        {% block navbar_brand %}makeitso{% endblock %}
+      <a class="navbar-brand d-flex align-items-center gap-2"
+         href="{% block navbar_brand_url %}{{ url_for('main.index') }}{% endblock %}">
+        {{ logo(36) }}
+        <span class="d-inline-block">{% block navbar_brand %}makeitso{% endblock %}</span>
       </a>
       <div class="d-flex align-items-center gap-3">
         {% block navbar_actions %}{% endblock %}
@@ -22,9 +26,13 @@
           <div class="navbar-brand me-0">
             <img src="{{ session.user.avatar_url }}" alt="User Avatar" class="rounded-circle" width="30" height="30">
             {{ session.user.login }}@github
-            <a class="btn btn-primary border-light ms-3" href="{{ url_for('auth.logout') }}">Logout</a>
+            <form method="post" action="{{ url_for('auth.logout') }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-primary border-light ms-3">Logout</button>
+            </form>
           </div>
-        {% else %}
+        {# The landing page has its own big login button #}
+        {% elif request.endpoint != "main.index" %}
           <a class="btn btn-primary border-light" href="{{ url_for('auth.login') }}">Login</a>
         {% endif %}
       </div>
