@@ -1,0 +1,7 @@
+{%- from "bootstrap5/utils.html" import render_icon -%}
+{#- Running time; the log poll refreshes it every second, and once the deploy ends it shows the total -#}
+<span id="deploy-timer" class="text-muted d-inline-flex align-items-center gap-1"
+      {% if oob %}hx-swap-oob="true"{% endif %}>
+    {{ render_icon("stopwatch") }}
+    {{ deploy.elapsed }}
+</span>

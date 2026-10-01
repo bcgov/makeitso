@@ -1,0 +1,8 @@
+{#- A moving striped bar while the deploy runs; empty once it's done -#}
+<div id="deploy-progress" {% if oob %}hx-swap-oob="true"{% endif %}>
+    {% if deploy.status.name == "IN_PROGRESS" %}
+        <div class="progress mb-3" role="progressbar" aria-label="Deploying" style="height: 0.5rem">
+            <div class="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
+        </div>
+    {% endif %}
+</div>

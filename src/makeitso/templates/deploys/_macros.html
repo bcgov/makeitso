@@ -1,0 +1,34 @@
+{# `live` gives the badge an id; on the deploy page, the poll answer's badge replaces this one by that id (hx-swap-oob) #}
+{% macro status_badge(status, live=False, oob=False) %}
+    {% set colors = {"SUCCEEDED": "success", "FAILED": "danger", "IN_PROGRESS": "secondary",
+                     "TIMED_OUT": "warning", "ABORTED": "dark"} %}
+    <span {% if live %}id="deploy-status"{% endif %} {% if oob %}hx-swap-oob="true"{% endif %}
+          class="badge text-bg-{{ colors[status.name] }}">
+        {{ status.value }}{% if status.name == "IN_PROGRESS" %}…{% endif %}
+    </span>
+{% endmacro %}
+
+{# "since...until" linking to GitHub's compare page. `since` is the commit that was deployed before #}
+{% macro compare_link(stack, since, until) -%}
+    <a href="https://github.com/{{ stack.organization }}/{{ stack.repository }}/compare/{{ since.commit_sha }}...{{ until.commit_sha }}"
+       target="_blank" rel="noopener"><code>{{ since.short_sha }}...{{ until.short_sha }}</code></a>
+{%- endmacro %}
+
+{# The compare link as a line under the deploy page's heading #}
+{% macro commit_range(stack, since, until) %}
+    <h2 class="h6 fw-normal border-bottom pb-2 mb-3">
+        Commits included in this deploy ({{ compare_link(stack, since, until) }})
+    </h2>
+{% endmacro %}
+
+{# Shown next to deploys that emergency mode let through despite failed CI checks #}
+{% macro bypass_badge(deploy) %}
+    {% if deploy.deployed_with_bypass %}
+        <span class="badge border border-danger text-danger" title="Deployed in emergency mode despite failed CI checks">checks bypassed</span>
+    {% endif %}
+{% endmacro %}
+
+{# Who started the deploy; continuous deploys have nobody behind them #}
+{% macro deployed_by(deploy) -%}
+    {%- if deploy.deployed_by %}@{{ deploy.deployed_by }}{% else %}anonymous{% endif -%}
+{%- endmacro %}

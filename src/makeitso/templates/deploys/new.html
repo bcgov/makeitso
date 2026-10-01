@@ -1,9 +1,113 @@
-{% from 'bootstrap5/form.html' import render_form %}
 {% extends "base.html" %}
-{% set title = "New Deploy" %}
+{% from "bootstrap5/utils.html" import render_icon %}
+{% from "deploys/_macros.html" import compare_link %}
+{% from "stacks/_tabs.html" import stack_tabs %}
+
+{% set title = "Deploy " ~ commit.short_sha %}
+{% set blocked = running or blockers or config_error %}
+
+{% block navbar_brand_url %}{{ url_for('stacks.detail', stack_id=stack.id) }}{% endblock %}
+{% block navbar_brand %}{% include "stacks/_navbar_brand.html" %}{% endblock %}
 
 {% block content %}
-    <h1>Create Deploy</h1>
-    <h4>Deploying from ...latest_deployed_commit -> {{commit_sha}}</h4>
-    {{ render_form(form, novalidate=True) }}
+    {{ stack_tabs(stack, "commits") }}
+
+    <h1 class="h4 mb-1">
+        Deploy <a href="{{ commit.url }}" target="_blank" rel="noopener"
+                  title="View commit on GitHub"><code>{{ commit.short_sha }}</code></a>
+        to {{ stack.environment }}
+    </h1>
+    <p class="text-muted mb-4">{{ commit.commit_message }} · {{ commit.author_name }}</p>
+
+    {% if running %}
+        <div class="alert alert-info d-flex justify-content-between align-items-center">
+            <span><code>{{ running.commit.short_sha }}</code> is being deployed</span>
+            <a href="{{ url_for('stacks.deploys.detail', stack_id=stack.id, deploy_id=running.id) }}">View log</a>
+        </div>
+    {% endif %}
+    {% if bypassing %}
+        <div class="alert alert-warning">Emergency mode: some CI checks failed, but they won't block this deploy</div>
+    {% elif emergency %}
+        <div class="alert alert-warning">Emergency mode: failed CI checks don't block deploys</div>
+    {% endif %}
+    {% if config_error %}
+        <div class="alert alert-danger">{{ config_error }}</div>
+    {% endif %}
+    {% for reason in blockers %}
+        <div class="alert alert-warning">{{ reason }}</div>
+    {% endfor %}
+
+    <section class="border-top pt-4 pb-4">
+        <div class="d-flex align-items-start gap-3 mb-3">
+            <span class="text-primary">{{ render_icon("git", size="1.5em") }}</span>
+            <div>
+                <h2 class="h5 mb-1">What's going out</h2>
+                <p class="small text-muted mb-0">
+                    {{ commits|length }} commit{{ "s" if commits|length != 1 }} · {{ compare_link(stack, since, commit) }}
+                </p>
+            </div>
+        </div>
+        {% set allow_failures = config.ci.allow_failures %}
+        <ul class="list-unstyled mb-3">
+            {% for commit in commits %}
+                <li class="d-flex align-items-center gap-2 py-2 border-bottom">
+                    {% include "stacks/_checks.html" %}
+                    <code>{{ commit.short_sha }}</code>
+                    <span class="text-truncate">{{ commit.commit_message }}</span>
+                    <span class="small text-muted ms-auto text-nowrap">{{ commit.author_name }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+        <p class="small text-muted mb-0">
+            {% if config_file %}Settings from <code>{{ config_file }}</code>{% else %}No engage.yaml, using the defaults{% endif %}
+            {% if config.ci.allow_failures %} · allowed to fail: {{ config.ci.allow_failures|join(", ") }}{% endif %}
+        </p>
+    </section>
+
+    {#
+      Alpine keeps the Deploy button off until it's safe to click:
+      - `ticked` counts the ticked checklist items; the button stays off until all `total` are ticked.
+        x-init counts them on load too, since a browser can restore ticks after a reload
+      - `sending` turns it off the moment the form is sent, so a second click can't start another
+        deploy while the first one is being set up. `pageshow` resets it when Back brings the page
+        back from its cache
+      The view checks the checklist again, in case the page is bypassed.
+      The form posts to this page's URL, so ?emergency=1 is kept
+    #}
+    <form method="post" class="border-top pt-4"
+          x-data="{ sending: false, ticked: 0, total: {{ config.review.checklist|length }} }"
+          x-init="ticked = $el.querySelectorAll('input[name=checklist]:checked').length"
+          @submit="sending = true" @pageshow.window="sending = false">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="d-flex align-items-start gap-3 mb-3">
+            <span class="text-primary">{{ render_icon("list-check", size="1.5em") }}</span>
+            <div class="flex-grow-1">
+                <h2 class="h5 mb-1">Before deploying</h2>
+                <p class="small text-muted mb-0">
+                    {% if config.review.checklist %}Confirm each item from engage.yaml's review checklist{% else %}No checklist for this stack (<code>review.checklist</code> in engage.yaml){% endif %}
+                </p>
+            </div>
+            {% if config.review.checklist and not blocked %}
+                <span class="small text-muted" x-show="ticked < total">Tick every item to enable Deploy</span>
+            {% endif %}
+        </div>
+        {# From engage.yaml's review.checklist #}
+        {% for item in config.review.checklist %}
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" name="checklist" value="{{ loop.index }}"
+                       id="checklist-{{ loop.index }}" required
+                       @change="ticked = ticked + ($el.checked ? 1 : -1)">
+                <label class="form-check-label" for="checklist-{{ loop.index }}">{{ item }}</label>
+            </div>
+        {% endfor %}
+        <div class="d-flex align-items-center gap-2 mt-4">
+            <button type="submit" class="btn {{ 'btn-danger' if bypassing else 'btn-primary' }} d-inline-flex align-items-center gap-2"
+                    {% if blocked %}disabled{% else %}:disabled="sending || ticked < total"{% endif %}>
+                <span class="spinner-border spinner-border-sm" x-show="sending" x-cloak aria-hidden="true"></span>
+                <span x-show="!sending">Deploy {{ commit.short_sha }}</span>
+                <span x-show="sending" x-cloak>Starting deploy…</span>
+            </button>
+            <a class="btn btn-link" href="{{ url_for('stacks.detail', stack_id=stack.id) }}">Cancel</a>
+        </div>
+    </form>
 {% endblock %}

@@ -24,10 +24,6 @@ class Commit(db.Model):
     pull_request_number: so.Mapped[int | None] = so.mapped_column(
         comment="The pull request number that this commit relates to in git"
     )
-    is_latest_deployed: so.Mapped[bool] = so.mapped_column(
-        default=False,
-        comment="Boolean value indicates if this is the commit that was last successfully deployed",
-    )
     url: so.Mapped[str] = so.mapped_column(comment="The url of the commit on github")
     committed_at: so.Mapped[datetime] = so.mapped_column(
         sa.DateTime(timezone=True), comment="The datetime that the commit was committed"
@@ -44,7 +40,9 @@ class Commit(db.Model):
     )
     ## relationships
     stack: so.Mapped[Stack] = so.relationship(back_populates="commits")
-    deploys: so.Mapped[list[Deploy]] = so.relationship(back_populates="commit")
+    deploys: so.Mapped[list[Deploy]] = so.relationship(
+        back_populates="commit", foreign_keys="Deploy.commit_id"
+    )
     commit_statuses: so.Mapped[list[CommitStatus]] = so.relationship(
         back_populates="commit", cascade="all, delete-orphan"
     )
@@ -53,6 +51,8 @@ class Commit(db.Model):
     def short_sha(self) -> str:
         return self.commit_sha[:7]
 
-    @property
-    def checks_state(self) -> str | None:
-        return overall_state(status.state for status in self.commit_statuses)
+    def checks_state(self, allow_failures: list[str]) -> str | None:
+        """One state for all checks; checks in allow_failures are shown but don't count"""
+        return overall_state(
+            status.state for status in self.commit_statuses if status.name not in allow_failures
+        )

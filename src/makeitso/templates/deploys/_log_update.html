@@ -1,0 +1,8 @@
+{#-
+  Answer to a log poll. Only the new log text is appended to the log, so any whitespace between the tags
+  would end up in the log too: every `-` below strips it. The badge, timer, progress bar and offset go out of band
+-#}
+{%- from "deploys/_macros.html" import status_badge -%}
+{{ chunk }}
+{{- status_badge(deploy.status, live=True, oob=True)|trim -}}
+{%- with oob=True %}{% include "deploys/_timer.html" %}{% include "deploys/_progress.html" %}{% include "deploys/_log_offset.html" %}{% endwith -%}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "bootstrap5/pagination.html" import render_pagination %}
+{% from "bootstrap5/utils.html" import render_icon %}
+{% from "deploys/_macros.html" import bypass_badge, deployed_by, status_badge %}
+{% from "stacks/_tabs.html" import stack_tabs %}
+
+{% set title = "Deploys " ~ stack.repository ~ " " ~ stack.environment %}
+
+{% block navbar_brand_url %}{{ url_for('stacks.detail', stack_id=stack.id) }}{% endblock %}
+{% block navbar_brand %}{% include "stacks/_navbar_brand.html" %}{% endblock %}
+
+{% block content %}
+    {{ stack_tabs(stack, "deploys") }}
+
+    {% if deploys.items %}
+        <table class="table align-middle">
+            <thead>
+            <tr><th>Status</th><th>Commit</th><th>By</th><th>Started</th><th>Took</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for deploy in deploys.items %}
+                <tr>
+                    <td>{{ status_badge(deploy.status) }}</td>
+                    <td>
+                        {# The sha opens the commit on GitHub #}
+                        <a target="_blank" rel="noopener" href="https://github.com/{{ stack.organization }}/{{ stack.repository }}/commit/{{ deploy.commit.commit_sha }}"><code>{{ deploy.commit.short_sha }}</code></a> {{ deploy.commit.commit_message }}
+                        {{ bypass_badge(deploy) }}
+                    </td>
+                    <td class="text-nowrap">{{ deployed_by(deploy) }}</td>
+                    <td class="text-nowrap">{{ deploy.started_at.strftime("%b %d, %Y %H:%M") }}</td>
+                    <td class="text-nowrap">{{ deploy.elapsed }}</td>
+                    <td><a class="text-nowrap text-decoration-none" href="{{ url_for('stacks.deploys.detail', stack_id=stack.id, deploy_id=deploy.id) }}">{{ render_icon("terminal") }} View log</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {# Page links; only shown when there's more than one page #}
+        {% if deploys.pages > 1 %}{{ render_pagination(deploys) }}{% endif %}
+    {% else %}
+        <p class="text-muted">No deploys yet.</p>
+    {% endif %}
+{% endblock %}
