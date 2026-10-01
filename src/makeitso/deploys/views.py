@@ -85,8 +85,14 @@ class NewDeployView(MethodView):
     def post(self, stack_id: int, commit_sha: str):
         """Start the deploy unless something blocks it, then show its log"""
         stack, commit = _stack_and_commit(stack_id, commit_sha)
-        # Back to this page with a message
-        retry = redirect(request.url)
+        retry = redirect(
+            url_for(
+                "stacks.deploys.new",
+                stack_id=stack.id,
+                commit_sha=commit.commit_sha,
+                emergency=1 if emergency_mode() else None,
+            )
+        )
         if current_deploy(stack.id) is not None:
             return _show_running(stack)
         try:
