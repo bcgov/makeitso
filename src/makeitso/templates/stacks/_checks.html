@@ -8,9 +8,12 @@
     {%- endif -%}
 {%- endmacro %}
 
+{# Checks in engage.yaml's ci.allow_failures are listed but don't count; pages can pass `allow_failures`,
+   otherwise the stack's list from the last sync is used #}
+{% set allowed = allow_failures if allow_failures is defined else stack.allow_failures %}
 <span class="position-relative d-inline-block" tabindex="0" x-data="{ open: false }"
       @mouseenter="open = true" @mouseleave="open = false" @focusin="open = true" @focusout="open = false">
-  {{ state_icon(commit.checks_state or "neutral", "1.75em") }}
+  {{ state_icon(commit.checks_state(allowed) or "neutral", "1.75em") }}
 
   <div class="position-absolute start-100 top-50 translate-middle-y ps-2" style="z-index: 1070"
        x-show="open" x-cloak>
@@ -25,6 +28,7 @@
                 {% else %}
                     <span class="text-truncate">{{ check.name }}</span>
                 {% endif %}
+                {% if check.name in allowed %}<span class="small text-muted text-nowrap">allowed to fail</span>{% endif %}
         </div>
         {% else %}
             <div class="text-muted">This commit has no CI checks.</div>

@@ -8,7 +8,7 @@ from rq.job import JobStatus
 from makeitso.extensions import db, job_queue
 from makeitso.github import GitHubError, GitHubRepo, client_for_server
 from makeitso.models.stack import Stack
-from makeitso.stacks.sync import sync_commits
+from makeitso.stacks.sync import save_allow_failures, sync_commits
 
 # Job states that mean a sync is waiting for a worker or running
 ACTIVE_STATUSES = {JobStatus.QUEUED, JobStatus.STARTED, JobStatus.DEFERRED, JobStatus.SCHEDULED}
@@ -32,7 +32,9 @@ def sync_stack(stack_id: int) -> None:
     if stack is None:
         return
     try:
-        sync_commits(stack, GitHubRepo.for_stack(client_for_server(), stack))
+        repo = GitHubRepo.for_stack(client_for_server(), stack)
+        sync_commits(stack, repo)
+        save_allow_failures(stack, repo)
     except (GithubException, GitHubError) as exc:
         # Save a readable message for the page, then fail the job as usual
         job = get_current_job()
