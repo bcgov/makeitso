@@ -28,9 +28,11 @@ def create_app(config_name: str | None = None) -> Flask:
     from makeitso.auth import bp as auth_bp
     from makeitso.main import bp as main_bp
     from makeitso.stacks import bp as stacks_bp
+    from makeitso.github import bp as github_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/")
     app.register_blueprint(stacks_bp, url_prefix="/stacks")
+    app.register_blueprint(github_bp, url_prefix="/github")
 
     return app
