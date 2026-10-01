@@ -9,11 +9,20 @@ from makeitso.models.stack import Stack
 
 
 class NewStackForm(FlaskForm):
-    organization = StringField("Github organization", validators=[DataRequired()])
-    repository = StringField("Github repository name", validators=[DataRequired()])
-    branch = StringField("Git branch to track", validators=[DataRequired()])
-    environment = StringField("Environment", validators=[DataRequired()])
-    submit = SubmitField("Create Stack")
+    organization = StringField(
+        "Organization", description="The GitHub user or organization", validators=[DataRequired()]
+    )
+    repository = StringField(
+        "Repository", description="The repository to deploy", validators=[DataRequired()]
+    )
+    branch = StringField(
+        "Branch", description="Commits on this branch can be deployed", validators=[DataRequired()]
+    )
+    environment = StringField(
+        "Environment",
+        description="Picks the engage file (e.g. engage.dev.yaml); scripts get it as ENVIRONMENT",
+        validators=[DataRequired()],
+    )
 
     # WTForms runs validate_<field> methods after that field's own validators
     def validate_repository(self, field: Field) -> None:
