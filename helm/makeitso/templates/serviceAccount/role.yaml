@@ -65,6 +65,7 @@ rules:
       - get
       - patch
       - update
+      - watch
     apiGroups:
       - apps.openshift.io
     resources:
@@ -75,6 +76,7 @@ rules:
       - get
       - patch
       - update
+      - watch
     apiGroups:
       - apps
     resources:
@@ -159,6 +161,7 @@ rules:
       - list
       - patch
       - update
+      - watch
     apiGroups:
       - ''
     resources:
@@ -170,6 +173,7 @@ rules:
       - list
       - patch
       - update
+      - watch
     apiGroups:
       - rbac.authorization.k8s.io
       - authorization.openshift.io
@@ -183,6 +187,7 @@ rules:
       - list
       - patch
       - update
+      - watch
     apiGroups:
       - extensions
       - apps
@@ -215,6 +220,7 @@ rules:
       - list
       - patch
       - update
+      - watch
     apiGroups:
       - autoscaling
     resources:
