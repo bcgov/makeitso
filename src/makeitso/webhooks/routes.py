@@ -60,7 +60,9 @@ def handle_push_event(payload):
                     # Do not deploy: A deploy is in progress
                     return
             repo = GitHubRepo.for_stack(github_client(current_app.config["GITHUB_TOKEN"]), s)
+            print("REPO: ", repo)
             config = load_config(repo, latest_commit.commit_sha, s.environment)
+            print("CONFIG: ", config)
             allowed = config.ci.allow_failures
             blockers = deploy_blockers(s, latest_commit, allowed)
             if blockers:
