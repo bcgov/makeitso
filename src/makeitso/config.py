@@ -2,6 +2,15 @@ import os
 import urllib.parse
 
 
+def _database_uri(name: str) -> str:
+    return (
+        f"postgresql://{os.environ.get('DB_USER', 'postgres')}"
+        f":{urllib.parse.quote(str(os.environ.get('DB_PASSWORD')))}"
+        f"@{os.environ.get('DB_HOST', '127.0.0.1')}:{os.environ.get('DB_PORT', '5432')}"
+        f"/{name}"
+    )
+
+
 class Config:
     # Production-safe defaults shared by every environment
 
@@ -25,12 +34,7 @@ class Config:
     # Where deploys check out code; Helm mounts /workspace
     DEPLOY_WORKSPACE = os.environ.get("DEPLOY_WORKSPACE", "/tmp/makeitso-workspace")
 
-    DB_USER = os.environ.get("DB_USER", "postgres")
-    SQLALCHEMY_DATABASE_URI = (
-        f"postgresql://{DB_USER}:{urllib.parse.quote(str(os.environ.get('DB_PASSWORD')))}"
-        f"@{os.environ.get('DB_HOST', '127.0.0.1')}:{os.environ.get('DB_PORT', '5432')}"
-        f"/{os.environ.get('DB_NAME', 'mis')}"
-    )
+    SQLALCHEMY_DATABASE_URI = _database_uri(os.environ.get("DB_NAME", "mis"))
 
 
 class ProductionConfig(Config):
@@ -53,9 +57,17 @@ class LocalConfig(Config):
     SESSION_COOKIE_SECURE = False
 
 
+class PytestConfig(LocalConfig):
+    TESTING = True
+    SECRET_KEY = "pytest"
+    # Fixed name, so tests never wipe the real database
+    SQLALCHEMY_DATABASE_URI = _database_uri("mis_test")
+
+
 configs = {
     "prod": ProductionConfig,
     "dev": DevelopmentConfig,
     "test": TestingConfig,
     "local": LocalConfig,
+    "pytest": PytestConfig,
 }

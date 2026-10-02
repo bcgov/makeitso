@@ -33,7 +33,16 @@ requires = ["uv_build>=0.12.17,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = ["ruff>=0.16.8", "ty>=0.0.83"]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.8",
+    "ty>=0.0.83",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Lets test files share a name across folders (tests/main/test_routes.py, tests/stacks/test_routes.py)
+addopts = ["--import-mode=importlib"]
 
 [tool.ruff]
 line-length = 100
