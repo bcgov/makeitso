@@ -16,6 +16,7 @@ from makeitso.deploys.queries import last_successful_deploy
 from makeitso.engage import EngageConfig, parse_config
 from makeitso.engage.config import config_files
 from makeitso.extensions import db, job_queue
+from makeitso.lib import debounce
 from makeitso.models.commit import Commit
 from makeitso.models.deploy import Deploy, DeployStatus
 from makeitso.models.stack import Stack
@@ -140,9 +141,9 @@ class _Log:
 
     def write(self, text: str) -> None:
         self.parts.append(text)
-        if time.monotonic() - self.last_save >= SAVE_EVERY:
-            self.save()
+        self.save()
 
+    @debounce(1.0)
     def save(self) -> None:
         self.deploy.output = "".join(self.parts)
         db.session.commit()
@@ -181,7 +182,11 @@ def _run(deploy: Deploy, workdir: Path, log: _Log) -> DeployStatus:
     if status is not DeployStatus.SUCCEEDED:
         return status
     config, name = _read_config(workdir, deploy.stack.environment)
-    log.write(f"\nSettings from {name}\n" if name else "\nNo engage.yaml, using the defaults\n")
+    log.write(
+        f"\nSettings from {name}\n"
+        if name
+        else "\nNo engage.yaml, using the defaults\n"
+    )
     log.write(f"\n$ bash {config.deploy.file}  (timeout {config.deploy.timeout}s)\n")
     # Run from the checkout, so the script's relative paths work
     return _stream(
@@ -242,7 +247,9 @@ def _stream(
     return DeployStatus.SUCCEEDED if proc.returncode == 0 else DeployStatus.FAILED
 
 
-def _watch(proc: subprocess.Popen, timeout: int, job_id: str) -> dict[str, DeployStatus]:
+def _watch(
+    proc: subprocess.Popen, timeout: int, job_id: str
+) -> dict[str, DeployStatus]:
     """Stops the command on timeout or cancel: SIGTERM, then SIGKILL if it's still running.
     On interrupt, SIGKILL right away.
     Returns a dict that gets a "status" once it stopped the command"""
