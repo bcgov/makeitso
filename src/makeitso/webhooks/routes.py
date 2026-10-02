@@ -56,11 +56,11 @@ def handle_completed_check_suite(payload):
     org, _, repo = repo_full_name.partition("/")
     matching_stacks = db.session.scalars(
         sa.select(Stack).where(
-            Stack.organization == org, Stack.repository == repo, Stack.branch == branch
+            Stack.organization == org, Stack.repository == repo, Stack.branch == branch, Stack.archived_at == None
         )
     )
     for s in matching_stacks:
-        current_app.logger.info("Check Suite Completed for %s/%s, syncing stack %s", repo_full_name, branch, s.id)
+        print(f"Check Suite Completed for {repo_full_name}/{branch}, syncing stack {s.id}")
         enqueue_sync(s.id, followup=True)
         # Trigger continuous deployment
         if s.continuous_deploy:
