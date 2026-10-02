@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Literal
 
-from flask import Flask, current_app
+from flask import current_app
 from rq.job import Job, JobStatus
 
 from makeitso.deploys.queries import last_successful_deploy
@@ -171,11 +171,7 @@ def _run(deploy: Deploy, workdir: Path, log: _Log) -> DeployStatus:
     if status is not DeployStatus.SUCCEEDED:
         return status
     config, name = _read_config(workdir, deploy.stack.environment)
-    log.write(
-        f"\nSettings from {name}\n"
-        if name
-        else "\nNo engage.yaml, using the defaults\n"
-    )
+    log.write(f"\nSettings from {name}\n" if name else "\nNo engage.yaml, using the defaults\n")
     log.write(f"\n$ bash {config.deploy.file}  (timeout {config.deploy.timeout}s)\n")
     # Run from the checkout, so the script's relative paths work
     return _stream(
@@ -236,9 +232,7 @@ def _stream(
     return DeployStatus.SUCCEEDED if proc.returncode == 0 else DeployStatus.FAILED
 
 
-def _watch(
-    proc: subprocess.Popen, timeout: int, job_id: str
-) -> dict[str, DeployStatus]:
+def _watch(proc: subprocess.Popen, timeout: int, job_id: str) -> dict[str, DeployStatus]:
     """Stops the command on timeout: SIGTERM, then SIGKILL if it's still running.
     Returns a dict that gets a "status" once it stopped the command"""
     stopped: dict[str, DeployStatus] = {}
@@ -285,9 +279,7 @@ def _watch(
     # daemon=True: Python doesn't wait for it on exit, so if our code crashes,
     # the watcher can't keep the job alive;
     # cutting it off is harmless, it only sends signals and never writes to the DB
-    threading.Thread(
-        target=watch, daemon=True, args=[current_app.extensions["rq_queue"]]
-    ).start()
+    threading.Thread(target=watch, daemon=True, args=[current_app.extensions["rq_queue"]]).start()
     return stopped
 
 

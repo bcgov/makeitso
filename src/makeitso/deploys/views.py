@@ -37,9 +37,7 @@ def _get_deploy(stack_id: int, deploy_id: int) -> Deploy:
 def _stack_and_commit(stack_id: int, commit_sha: str) -> tuple[Stack, Commit]:
     stack = Stack.active_or_404(stack_id)
     commit = db.first_or_404(
-        sa.select(Commit).where(
-            Commit.stack_id == stack.id, Commit.commit_sha == commit_sha
-        )
+        sa.select(Commit).where(Commit.stack_id == stack.id, Commit.commit_sha == commit_sha)
     )
     return stack, commit
 
@@ -50,9 +48,7 @@ def _show_running(stack: Stack):
     running = current_deploy(stack.id)
     if running is None:
         return redirect(url_for("stacks.detail", stack_id=stack.id))
-    return redirect(
-        url_for("stacks.deploys.detail", stack_id=stack.id, deploy_id=running.id)
-    )
+    return redirect(url_for("stacks.deploys.detail", stack_id=stack.id, deploy_id=running.id))
 
 
 def _config(stack: Stack, commit: Commit) -> tuple[EngageConfig, str | None]:
@@ -87,9 +83,7 @@ class NewDeployView(MethodView):
             config=config,
             config_file=config_file,
             config_error=config_error,
-            blockers=deploy_blockers(
-                stack, commit, config.ci.allow_failures, emergency
-            ),
+            blockers=deploy_blockers(stack, commit, config.ci.allow_failures, emergency),
             emergency=emergency,
             bypassing=emergency and checks_failed(commit, config.ci.allow_failures),
         )
@@ -139,17 +133,13 @@ class NewDeployView(MethodView):
             # and the one-running-deploy index refused this one
             db.session.rollback()
             return _show_running(stack)
-        return redirect(
-            url_for("stacks.deploys.detail", stack_id=stack.id, deploy_id=deploy.id)
-        )
+        return redirect(url_for("stacks.deploys.detail", stack_id=stack.id, deploy_id=deploy.id))
 
 
 class DeployView(MethodView):
     @requires_auth
     def get(self, stack_id: int, deploy_id: int):
-        return render_template(
-            "deploys/detail.html", deploy=_get_deploy(stack_id, deploy_id)
-        )
+        return render_template("deploys/detail.html", deploy=_get_deploy(stack_id, deploy_id))
 
 
 class SignalView(View):
@@ -161,9 +151,7 @@ class SignalView(View):
     def dispatch_request(self, stack_id: int, deploy_id: int):
         deploy = _get_deploy(stack_id, deploy_id)
         tasks.signal_job(deploy, self.signal)
-        return redirect(
-            url_for("stacks.deploys.detail", stack_id=stack_id, deploy_id=deploy_id)
-        )
+        return redirect(url_for("stacks.deploys.detail", stack_id=stack_id, deploy_id=deploy_id))
 
 
 class DeployLogView(MethodView):
