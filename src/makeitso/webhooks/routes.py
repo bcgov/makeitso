@@ -41,7 +41,7 @@ def handle_push_event(payload):
     )
     for s in matching_stacks:
         print(f"Push event received for Stack {repo_full_name} - {branch}. Syncing Stack...")
-        enqueue_sync(s.id)
+        enqueue_sync(s.id, followup=True)
 
 
 @bp.route("/webhook-receiver", methods=["POST"])
