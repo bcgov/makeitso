@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "makeitso.fullname" . }}-sync-worker
+  labels:
+    component: sync-worker
+{{- include "makeitso.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.syncWorker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "makeitso.selectorLabels" . | nindent 6 }}
+      component: sync-worker
+  template:
+    metadata:
+      labels:
+{{- include "makeitso.selectorLabels" . | nindent 8 }}
+        component: sync-worker
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: {{ template "makeitso.fullname" . }}-sync-worker
+          image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
+          imagePullPolicy: {{ .Values.app.imagePullPolicy }}
+          # Only syncs, so a long deploy never holds them up
+          command: ["flask", "--app", "makeitso", "worker", "--queue", "syncs"]
+          env:
+            {{- include "makeitso.commonEnv" . | nindent 12 }}
+            {{- include "makeitso.superuserDbEnv" . | nindent 12 }}
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.githubAppSecretName | quote }}
+                  key: ghToken
+          # Syncs only call the GitHub API; no checkout, workspace or cluster access
+          resources:
+            requests:
+              cpu: 50m
+              memory: 300Mi

@@ -7,7 +7,12 @@ app:
 
   githubAppSecretName: makeitso-github-app-secret
 
-worker:
+# Runs deploys
+deployWorker:
+  replicas: 1
+
+# Runs stack syncs
+syncWorker:
   replicas: 1
 
 # Every 10 minutes, sync stacks not synced in the last 30 minutes

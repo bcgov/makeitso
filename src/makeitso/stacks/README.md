@@ -37,7 +37,7 @@ never wait on GitHub.
 Keeps stacks up to date when nobody presses Sync, without hitting GitHub more than needed.
 
 - The `stack-sync` CronJob runs `flask stacks sync` every 10 minutes
-  (`stackSync.schedule` in the Helm values). It only queues syncs; the worker does them.
+  (`stackSync.schedule` in the Helm values). It only queues syncs; the sync worker does them.
 - Only stacks that haven't synced successfully in the last 30 minutes are picked. Each stack
   saves when its last successful sync was, so a manual Sync also resets the clock.
 - Each stack also counts its failed syncs in a row. After 5, background syncs skip it (a repo
