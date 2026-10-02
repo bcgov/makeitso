@@ -41,8 +41,9 @@ RUN groupadd --system --gid 1001 nonroot \
 # Copy the application from the builder
 COPY --from=builder --chown=nonroot:nonroot /app /app
 
-# Import and validate additional tools
+# Setup and validate additional tools
 COPY --from=helm-source /usr/bin/helm /usr/local/bin/helm
+ENV HELM_CONFIG_HOME=/workspace/.helm
 
 RUN helm version
 RUN make --version
