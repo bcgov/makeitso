@@ -3,6 +3,7 @@
 
 import functools
 from threading import Timer
+from typing import Any
 
 
 def debounce(timeout: float):

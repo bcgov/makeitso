@@ -9,8 +9,11 @@ from pathlib import Path
 from typing import Literal
 
 from flask import current_app
+from flask_sqlalchemy import SQLAlchemy
 from rq import Queue
 from rq.job import Job, JobStatus
+from sqlalchemy import update
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from makeitso.deploys.queries import last_successful_deploy
 from makeitso.engage import EngageConfig, parse_config
@@ -139,14 +142,27 @@ class _Log:
         self.parts: list[str] = []
         self.last_save = time.monotonic()
 
+        self.session_factory = sessionmaker(bind=db.engine)
+        self.ScopedSession = scoped_session(self.session_factory)
+
     def write(self, text: str) -> None:
         self.parts.append(text)
         self.save()
 
     @debounce(1.0)
     def save(self) -> None:
-        self.deploy.output = "".join(self.parts)
-        db.session.commit()
+        new_session = self.ScopedSession()
+        try:
+            update_statement = (
+                update(Deploy)
+                .where(Deploy.id == self.deploy.id)
+                .values(output="".join(self.parts))
+            )
+            new_session.execute(update_statement)
+            new_session.commit()
+        finally:
+            new_session.close()
+
         self.last_save = time.monotonic()
 
 
