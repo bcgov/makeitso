@@ -267,7 +267,7 @@ def _watch(
                 case "interrupt":
                     stopped["status"] = DeployStatus.ABORTED
                     send(signal.SIGKILL)
-                case None:
+                case _:
                     if time.monotonic() < active_deadline:
                         continue
                     stopped["status"] = DeployStatus.TIMED_OUT
