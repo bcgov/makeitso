@@ -50,7 +50,6 @@ def handle_push_event(payload):
         enqueue_sync(s.id, followup=True)
 
 def handle_completed_check_suite(payload):
-    conclusion = payload.get("check_suite", {}).get("conclusion")
     repo_full_name = payload.get("repository", {}).get("full_name")
     branch = payload.get("check_suite", {}).get("head_branch")
     org, _, repo = repo_full_name.partition("/")
@@ -61,7 +60,7 @@ def handle_completed_check_suite(payload):
     )
     for s in matching_stacks:
         print(f"Check Suite Completed for {repo_full_name}/{branch}, syncing stack {s.id}")
-        enqueue_sync(s.id, followup=True)
+        enqueue_sync(s.id, followup=True) # This could be removed after adding a handle_completed_check_run() that updates the individual check_status records
         # Trigger continuous deployment
         if s.continuous_deploy:
             last_deploy = db.session.scalar(sa.select(Deploy).where(Deploy.stack_id == s.id).order_by(Deploy.id.desc()).limit(1))
