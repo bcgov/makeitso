@@ -19,9 +19,9 @@ never wait on GitHub.
 
 1. Runs when a stack is created, when someone presses Sync, when GitHub reports a push to the
    stack's branch, and in the background (below).
-2. The sync is queued as a background job; a stack never has two syncs at once. A push that
-   arrives while a sync is running queues one more sync to run after it, so new commits
-   aren't missed.
+2. The sync is queued as a background job on the `syncs` queue, which has its own worker so
+   deploys don't hold it up; a stack never has two syncs at once. A push that arrives while a
+   sync is running queues one more sync to run after it, so new commits aren't missed.
 3. The worker, using the server's GitHub token:
    - saves the commits and replaces their checks
      (see [github](../github/README.md) for which commits)

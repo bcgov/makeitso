@@ -60,7 +60,7 @@ def enqueue_sync(stack_id: int, followup: bool = False) -> None:
     """Queue a sync for the stack, unless one is already waiting or running. With followup, a
     running sync gets one more queued after it (for pushes that may have landed mid-sync)"""
     job_id = _job_id(stack_id)
-    running = job_queue.queue.fetch_job(job_id)
+    running = job_queue.syncs.fetch_job(job_id)
     if followup and running is not None and running.get_status() == JobStatus.STARTED:
         # The running sync may have read the old head, so queue one more after it, even if it fails
         after = Dependency(jobs=[running], allow_failure=True)
@@ -70,14 +70,14 @@ def enqueue_sync(stack_id: int, followup: bool = False) -> None:
 
 
 def _enqueue(stack_id: int, job_id: str, depends_on: Dependency | None = None) -> None:
-    existing = job_queue.queue.fetch_job(job_id)
+    existing = job_queue.syncs.fetch_job(job_id)
     if existing is not None:
         if existing.get_status() in ACTIVE_STATUSES:
             return
         # A failed job keeps its id; remove it so the id is free again
         existing.delete()
     try:
-        job_queue.queue.enqueue(
+        job_queue.syncs.enqueue(
             sync_stack,
             stack_id,
             job_id=job_id,
@@ -110,7 +110,7 @@ def enqueue_stale_syncs() -> int:
 
 
 def sync_state(stack_id: int) -> SyncState:
-    job = job_queue.queue.fetch_job(_job_id(stack_id))
+    job = job_queue.syncs.fetch_job(_job_id(stack_id))
     if job is None:
         return SyncState(status=None, error=None)
     status = job.get_status()
