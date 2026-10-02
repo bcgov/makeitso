@@ -2,7 +2,11 @@ import os
 import hmac
 import hashlib
 import json
+import sqlalchemy as sa
+from makeitso.extensions import db
 from flask import Blueprint, request, abort
+from makeitso.models.stack import Stack
+from makeitso.stacks.tasks import enqueue_sync
 
 bp = Blueprint("github", __name__)
 GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET", "").encode()
@@ -21,9 +25,14 @@ def verify_signature(payload, signature):
 
 def handle_push_event(payload):
     ref = payload.get('ref')  # e.g., 'refs/heads/main'
-    repo_name = payload.get('repository', {}).get('full_name')
-    print(f"Code pushed to {ref} in {repo_name}")
-    
+    repo_full_name = payload.get('repository', {}).get('full_name')
+    branch = ref.split('refs/heads/')[1]
+    org, _, repo = repo_full_name.partition('/')
+    matching_stacks = db.session.scalars(sa.select(Stack).where(Stack.organisation == org, Stack.repository == repo, Stack.branch == branch))
+    for s in matching_stacks:
+        print(f"Push event received for Stack {repo_full_name} - {branch}. Syncing Stack...")
+        enqueue_sync(s.id)
+        
 
 @bp.route('/webhook', methods=['POST'])
 def receive_github_webhook():
