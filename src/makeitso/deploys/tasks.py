@@ -35,7 +35,6 @@ HEARTBEAT_LIMIT = timedelta(minutes=2)
 def _job_id(deploy_id: int) -> str:
     return f"deploy-{deploy_id}"
 
-
 # --- Starting a deploy (web request) ---
 
 

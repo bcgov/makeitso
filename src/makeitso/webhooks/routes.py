@@ -8,6 +8,12 @@ from flask import Blueprint, abort, current_app, request
 from makeitso.extensions import csrf, db
 from makeitso.models.stack import Stack
 from makeitso.stacks.tasks import enqueue_sync
+from makeitso.models.commit import Commit
+from makeitso.models.deploy import Deploy
+from makeitso.deploys.tasks import start_deploy
+from makeitso.github import GitHubRepo, client_for_current_user
+from makeitso.engage.loader import load_config
+from makeitso.deploys.helpers import deploy_blockers
 
 bp = Blueprint("webhooks", __name__)
 
@@ -25,6 +31,40 @@ def verify_signature(payload, signature):
     mac = hmac.new(secret.encode(), msg=payload, digestmod=hashlib.sha256)
     return hmac.compare_digest(mac.hexdigest(), signature_hex)
 
+def handle_push_event(payload):
+    ref = payload.get('ref')  # e.g., 'refs/heads/main'
+    repo_full_name = payload.get('repository', {}).get('full_name')
+    branch = ref.split('refs/heads/')[1]
+    org, _, repo = repo_full_name.partition('/')
+    matching_stacks = db.session.scalars(sa.select(Stack).where(Stack.organization == org, Stack.repository == repo, Stack.branch == branch))
+    for s in matching_stacks:
+        print(f"Push event received for Stack {repo_full_name} - {branch}. Syncing Stack...")
+        enqueue_sync(s.id)
+        # Trigger Continuous Deploy
+        if s.continuous_deploy:
+            last_deploy = db.session.scalar(sa.select(Deploy).where(Deploy.stack_id == s.id, Deploy.status == "SUCCEEDED").order_by(Deploy.id.desc()).limit(1))
+            latest_commit = db.session.scalar(sa.select(Commit).where(Commit.stack_id == s.id).order_by(Commit.id.desc()).limit(1))
+            if last_deploy.commit_id == latest_commit.id:
+                # Do not deploy: Commit already deployed
+                return
+            if last_deploy.status == 'IN_PROGRESS':
+                # Do not deploy: A deploy is in progress
+                return
+            repo = GitHubRepo.for_stack(client_for_current_user(), s)
+            config = load_config(repo, latest_commit.commit_sha, s.environment)
+            allowed = config.ci.allow_failures
+            blockers = deploy_blockers(s, latest_commit, allowed)
+            if blockers:
+                # Do not Deploy: Deploy is blocked
+                return
+            start_deploy(
+                s,
+                latest_commit,
+                config.deploy.timeout
+            )
+
+
+        
 
 def handle_push_event(payload):
     ref = payload.get("ref", "")  # e.g., 'refs/heads/main'
