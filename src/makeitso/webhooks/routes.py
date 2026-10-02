@@ -80,13 +80,14 @@ def handle_completed_check_suite(payload):
             if blockers:
                 # Do not Deploy: Deploy is blocked
                 return
-            start_deploy(
-                s,
-                latest_commit,
-                config.deploy.timeout,
-                "Continuous Deploy"
+            if latest_commit.checks_state == "success":
+                start_deploy(
+                    s,
+                    latest_commit,
+                    config.deploy.timeout,
+                    "Continuous Deploy"
 
-            )
+                )
 
 @bp.route("/webhook-receiver", methods=["POST"])
 @csrf.exempt
