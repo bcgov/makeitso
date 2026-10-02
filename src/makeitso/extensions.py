@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 
 from makeitso.redis_queue import RedisQueue
-from makeitso.github import bp as github_bp
 
 bootstrap = Bootstrap5()
 # Checks the CSRF token on every POST/PUT/PATCH/DELETE request
@@ -13,7 +12,6 @@ csrf = CSRFProtect()
 db = SQLAlchemy()
 migrate = Migrate()
 job_queue = RedisQueue()
-csrf.exempt(github_bp)
 
 oauth = OAuth()
 # Client ID and secret are read from app.config (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
