@@ -40,7 +40,7 @@ def handle_push_event(payload):
         )
     )
     for s in matching_stacks:
-        print(f"Push event received for Stack {repo_full_name} - {branch}. Syncing Stack...")
+        current_app.logger.info("Push to %s/%s, syncing stack %s", repo_full_name, branch, s.id)
         enqueue_sync(s.id, followup=True)
 
 
