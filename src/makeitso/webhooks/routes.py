@@ -14,15 +14,15 @@ bp = Blueprint("webhooks", __name__)
 
 def verify_signature(payload, signature):
     """Verify that the payload matches the GitHub signature."""
-    if not signature:
+    secret = current_app.config["GITHUB_WEBHOOK_SECRET"]
+    if not secret or not signature:
         return False
-    sha_name, signature_hex = signature.split("=")
+    sha_name, _, signature_hex = signature.partition("=")
     if sha_name != "sha256":
         return False
 
     # Calculate local signature
-    secret = (current_app.config["GITHUB_WEBHOOK_SECRET"] or "").encode()
-    mac = hmac.new(secret, msg=payload, digestmod=hashlib.sha256)
+    mac = hmac.new(secret.encode(), msg=payload, digestmod=hashlib.sha256)
     return hmac.compare_digest(mac.hexdigest(), signature_hex)
 
 
