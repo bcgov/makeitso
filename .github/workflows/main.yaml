@@ -16,3 +16,5 @@ jobs:
     uses: ./.github/workflows/build.yaml
   test:
     uses: ./.github/workflows/test.yaml
+    permissions:
+      contents: read

@@ -3,6 +3,10 @@ name: Run tests
 on:
   workflow_call:
 
+# The tests only need to check out the code
+permissions:
+  contents: read
+
 jobs:
   pytest:
     runs-on: ubuntu-latest
