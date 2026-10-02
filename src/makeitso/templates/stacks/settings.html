@@ -54,7 +54,8 @@
         {{ env_var_form.hidden_tag() }}
         <div class="col-md-4">{{ render_field(env_var_form.key, placeholder="NAMESPACE_PREFIX") }}</div>
         <div class="col-md-6">{{ render_field(env_var_form.value) }}</div>
-        <div class="col-md-2 pt-md-4 mt-md-2">
+        <div class="col-md-2">
+            <label class="form-label d-none d-md-block" aria-hidden="true">&nbsp;</label>
             <button type="submit" class="btn btn-primary w-100">Save</button>
         </div>
     </form>
