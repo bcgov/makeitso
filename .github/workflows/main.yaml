@@ -14,3 +14,5 @@ on:
 jobs:
   build:
     uses: ./.github/workflows/build.yaml
+  test:
+    uses: ./.github/workflows/test.yaml
