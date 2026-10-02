@@ -48,7 +48,20 @@ def handle_push_event(payload):
     for s in matching_stacks:
         current_app.logger.info("Push to %s/%s, syncing stack %s", repo_full_name, branch, s.id)
         enqueue_sync(s.id, followup=True)
-        # Trigger Continuous Deploy
+
+def handle_completed_check_suite(payload):
+    conclusion = payload.get("check_suite", {}).get("conclusion")
+    repo_full_name = payload.get("repository", {}).get("full_name")
+    branch = payload.get("check_suite", {}).get("head_branch")
+    org, _, repo = repo_full_name.partition("/")
+    matching_stacks = db.session.scalars(
+        sa.select(Stack).where(
+            Stack.organization == org, Stack.repository == repo, Stack.branch == branch
+        )
+    )
+    for s in matching_stacks:
+        current_app.logger.info("Check Suite Completed for %s/%s, syncing stack %s", repo_full_name, branch, s.id)
+        enqueue_sync(s.id, followup=True)
         if s.continuous_deploy:
             last_deploy = db.session.scalar(sa.select(Deploy).where(Deploy.stack_id == s.id, Deploy.status == "SUCCEEDED").order_by(Deploy.id.desc()).limit(1))
             latest_commit = db.session.scalar(sa.select(Commit).where(Commit.stack_id == s.id).order_by(Commit.id.desc()).limit(1))
@@ -74,7 +87,6 @@ def handle_push_event(payload):
 
             )
 
-
 @bp.route("/webhook-receiver", methods=["POST"])
 @csrf.exempt
 def receive_github_webhook():
@@ -91,5 +103,10 @@ def receive_github_webhook():
     # Handle Push Events
     if event_type == "push":
         handle_push_event(payload)
+
+    if event_type == "check_suite":
+        status = payload.get("check_suite", {}).get("status")
+        if status == "completed":
+            handle_completed_check_suite(payload)
 
     return json.dumps({"success": True}), 200
