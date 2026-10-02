@@ -11,7 +11,7 @@ from makeitso.stacks.tasks import enqueue_sync
 from makeitso.models.commit import Commit
 from makeitso.models.deploy import Deploy
 from makeitso.deploys.tasks import start_deploy
-from makeitso.github import GitHubRepo, client_for_current_user
+from makeitso.github import GitHubRepo, github_client
 from makeitso.engage.loader import load_config
 from makeitso.deploys.helpers import deploy_blockers
 
@@ -59,7 +59,7 @@ def handle_push_event(payload):
                 if last_deploy.status == 'IN_PROGRESS':
                     # Do not deploy: A deploy is in progress
                     return
-            repo = GitHubRepo.for_stack(client_for_current_user(), s)
+            repo = GitHubRepo.for_stack(github_client(current_app.config["GITHUB_TOKEN"]), s)
             config = load_config(repo, latest_commit.commit_sha, s.environment)
             allowed = config.ci.allow_failures
             blockers = deploy_blockers(s, latest_commit, allowed)
