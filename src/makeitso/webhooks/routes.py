@@ -30,16 +30,24 @@ def verify_signature(payload, signature):
     # Calculate local signature
     mac = hmac.new(secret.encode(), msg=payload, digestmod=hashlib.sha256)
     return hmac.compare_digest(mac.hexdigest(), signature_hex)
+        
 
 def handle_push_event(payload):
-    ref = payload.get('ref')  # e.g., 'refs/heads/main'
-    repo_full_name = payload.get('repository', {}).get('full_name')
-    branch = ref.split('refs/heads/')[1]
-    org, _, repo = repo_full_name.partition('/')
-    matching_stacks = db.session.scalars(sa.select(Stack).where(Stack.organization == org, Stack.repository == repo, Stack.branch == branch))
+    ref = payload.get("ref", "")  # e.g., 'refs/heads/main'
+    # Tag pushes and branch deletions don't need a sync
+    if not ref.startswith("refs/heads/") or payload.get("deleted"):
+        return
+    repo_full_name = payload.get("repository", {}).get("full_name")
+    branch = ref.removeprefix("refs/heads/")
+    org, _, repo = repo_full_name.partition("/")
+    matching_stacks = db.session.scalars(
+        sa.select(Stack).where(
+            Stack.organization == org, Stack.repository == repo, Stack.branch == branch
+        )
+    )
     for s in matching_stacks:
-        print(f"Push event received for Stack {repo_full_name} - {branch}. Syncing Stack...")
-        enqueue_sync(s.id)
+        current_app.logger.info("Push to %s/%s, syncing stack %s", repo_full_name, branch, s.id)
+        enqueue_sync(s.id, followup=True)
         # Trigger Continuous Deploy
         if s.continuous_deploy:
             last_deploy = db.session.scalar(sa.select(Deploy).where(Deploy.stack_id == s.id, Deploy.status == "SUCCEEDED").order_by(Deploy.id.desc()).limit(1))
@@ -62,26 +70,6 @@ def handle_push_event(payload):
                 latest_commit,
                 config.deploy.timeout
             )
-
-
-        
-
-def handle_push_event(payload):
-    ref = payload.get("ref", "")  # e.g., 'refs/heads/main'
-    # Tag pushes and branch deletions don't need a sync
-    if not ref.startswith("refs/heads/") or payload.get("deleted"):
-        return
-    repo_full_name = payload.get("repository", {}).get("full_name")
-    branch = ref.removeprefix("refs/heads/")
-    org, _, repo = repo_full_name.partition("/")
-    matching_stacks = db.session.scalars(
-        sa.select(Stack).where(
-            Stack.organization == org, Stack.repository == repo, Stack.branch == branch
-        )
-    )
-    for s in matching_stacks:
-        current_app.logger.info("Push to %s/%s, syncing stack %s", repo_full_name, branch, s.id)
-        enqueue_sync(s.id, followup=True)
 
 
 @bp.route("/webhook-receiver", methods=["POST"])
