@@ -64,7 +64,7 @@ def handle_completed_check_suite(payload):
         enqueue_sync(s.id, followup=True)
         # Trigger continuous deployment
         if s.continuous_deploy:
-            last_deploy = db.session.scalar(sa.select(Deploy).where(Deploy.stack_id == s.id, Deploy.status == "SUCCEEDED").order_by(Deploy.id.desc()).limit(1))
+            last_deploy = db.session.scalar(sa.select(Deploy).where(Deploy.stack_id == s.id).order_by(Deploy.id.desc()).limit(1))
             latest_commit = db.session.scalar(sa.select(Commit).where(Commit.stack_id == s.id).order_by(Commit.id.desc()).limit(1))
             if last_deploy:
                 if last_deploy.commit_id == latest_commit.id:
