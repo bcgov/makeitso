@@ -1,12 +1,19 @@
+from typing import Literal
+
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from flask import flash, redirect, render_template, request, session, url_for
-from flask.views import MethodView
+from flask.views import MethodView, View
 from sqlalchemy.exc import IntegrityError
 
 from makeitso.auth.decorators import requires_auth
+from makeitso.deploys import tasks
 from makeitso.deploys.helpers import checks_failed, deploy_blockers, emergency_mode
-from makeitso.deploys.queries import commits_between, current_deploy, last_successful_deploy
+from makeitso.deploys.queries import (
+    commits_between,
+    current_deploy,
+    last_successful_deploy,
+)
 from makeitso.deploys.tasks import fail_if_lost, start_deploy
 from makeitso.engage import EngageConfig, EngageConfigError
 from makeitso.engage.loader import load_config
@@ -30,7 +37,9 @@ def _get_deploy(stack_id: int, deploy_id: int) -> Deploy:
 def _stack_and_commit(stack_id: int, commit_sha: str) -> tuple[Stack, Commit]:
     stack = Stack.active_or_404(stack_id)
     commit = db.first_or_404(
-        sa.select(Commit).where(Commit.stack_id == stack.id, Commit.commit_sha == commit_sha)
+        sa.select(Commit).where(
+            Commit.stack_id == stack.id, Commit.commit_sha == commit_sha
+        )
     )
     return stack, commit
 
@@ -41,7 +50,9 @@ def _show_running(stack: Stack):
     running = current_deploy(stack.id)
     if running is None:
         return redirect(url_for("stacks.detail", stack_id=stack.id))
-    return redirect(url_for("stacks.deploys.detail", stack_id=stack.id, deploy_id=running.id))
+    return redirect(
+        url_for("stacks.deploys.detail", stack_id=stack.id, deploy_id=running.id)
+    )
 
 
 def _config(stack: Stack, commit: Commit) -> tuple[EngageConfig, str | None]:
@@ -76,7 +87,9 @@ class NewDeployView(MethodView):
             config=config,
             config_file=config_file,
             config_error=config_error,
-            blockers=deploy_blockers(stack, commit, config.ci.allow_failures, emergency),
+            blockers=deploy_blockers(
+                stack, commit, config.ci.allow_failures, emergency
+            ),
             emergency=emergency,
             bypassing=emergency and checks_failed(commit, config.ci.allow_failures),
         )
@@ -115,20 +128,42 @@ class NewDeployView(MethodView):
         bypass = emergency and checks_failed(commit, allowed)
         try:
             deploy = start_deploy(
-                stack, commit, config.deploy.timeout, session["user"]["login"], bypass=bypass
+                stack,
+                commit,
+                config.deploy.timeout,
+                session["user"]["login"],
+                bypass=bypass,
             )
         except IntegrityError:
             # A double-click: the other request started a deploy between our check and the save,
             # and the one-running-deploy index refused this one
             db.session.rollback()
             return _show_running(stack)
-        return redirect(url_for("stacks.deploys.detail", stack_id=stack.id, deploy_id=deploy.id))
+        return redirect(
+            url_for("stacks.deploys.detail", stack_id=stack.id, deploy_id=deploy.id)
+        )
 
 
 class DeployView(MethodView):
     @requires_auth
     def get(self, stack_id: int, deploy_id: int):
-        return render_template("deploys/detail.html", deploy=_get_deploy(stack_id, deploy_id))
+        return render_template(
+            "deploys/detail.html", deploy=_get_deploy(stack_id, deploy_id)
+        )
+
+
+class SignalView(View):
+    methods = ["POST"]
+
+    def __init__(self, signal: Literal["cancel", "interrupt"]):
+        self.signal = signal
+
+    def dispatch_request(self, stack_id: int, deploy_id: int):
+        deploy = _get_deploy(stack_id, deploy_id)
+        tasks.signal_job(deploy, self.signal)
+        return redirect(
+            url_for("stacks.deploys.detail", stack_id=stack_id, deploy_id=deploy_id)
+        )
 
 
 class DeployLogView(MethodView):

@@ -36,7 +36,19 @@
     {% if deploy.deployed_with_bypass %}
         <div class="alert alert-warning">Deployed in emergency mode: some CI checks had failed</div>
     {% endif %}
+    
     {{ commit_range(stack, deploy.since_commit or deploy.commit, deploy.commit) }}
+
+    <div class="d-flex gap-2 pb-3 justify-content-end">
+        <form action="{{ url_for('stacks.deploys.cancel', stack_id=stack.id, deploy_id=deploy.id) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-warning">Cancel Deployment</button>
+        </form>
+        <form action="{{ url_for('stacks.deploys.interrupt', stack_id=stack.id, deploy_id=deploy.id) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger">Interrupt Deployment</button>
+        </form>
+    </div>
     {% include "deploys/_progress.html" %}
     {#
       The saved output from the database. The box asks for new text right away ("load") and, while the
