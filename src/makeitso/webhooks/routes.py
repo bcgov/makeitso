@@ -1,17 +1,15 @@
 import hashlib
 import hmac
 import json
-import os
 
 import sqlalchemy as sa
-from flask import Blueprint, abort, request
+from flask import Blueprint, abort, current_app, request
 
 from makeitso.extensions import csrf, db
 from makeitso.models.stack import Stack
 from makeitso.stacks.tasks import enqueue_sync
 
 bp = Blueprint("webhooks", __name__)
-GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET", "").encode()
 
 
 def verify_signature(payload, signature):
@@ -23,7 +21,8 @@ def verify_signature(payload, signature):
         return False
 
     # Calculate local signature
-    mac = hmac.new(GITHUB_WEBHOOK_SECRET, msg=payload, digestmod=hashlib.sha256)
+    secret = (current_app.config["GITHUB_WEBHOOK_SECRET"] or "").encode()
+    mac = hmac.new(secret, msg=payload, digestmod=hashlib.sha256)
     return hmac.compare_digest(mac.hexdigest(), signature_hex)
 
 
