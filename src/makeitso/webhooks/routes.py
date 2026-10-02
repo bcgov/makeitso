@@ -52,12 +52,13 @@ def handle_push_event(payload):
         if s.continuous_deploy:
             last_deploy = db.session.scalar(sa.select(Deploy).where(Deploy.stack_id == s.id, Deploy.status == "SUCCEEDED").order_by(Deploy.id.desc()).limit(1))
             latest_commit = db.session.scalar(sa.select(Commit).where(Commit.stack_id == s.id).order_by(Commit.id.desc()).limit(1))
-            if last_deploy.commit_id == latest_commit.id:
-                # Do not deploy: Commit already deployed
-                return
-            if last_deploy.status == 'IN_PROGRESS':
-                # Do not deploy: A deploy is in progress
-                return
+            if last_deploy:
+                if last_deploy.commit_id == latest_commit.id:
+                    # Do not deploy: Commit already deployed
+                    return
+                if last_deploy.status == 'IN_PROGRESS':
+                    # Do not deploy: A deploy is in progress
+                    return
             repo = GitHubRepo.for_stack(client_for_current_user(), s)
             config = load_config(repo, latest_commit.commit_sha, s.environment)
             allowed = config.ci.allow_failures
