@@ -27,9 +27,12 @@ def verify_signature(payload, signature):
 
 
 def handle_push_event(payload):
-    ref = payload.get("ref")  # e.g., 'refs/heads/main'
+    ref = payload.get("ref", "")  # e.g., 'refs/heads/main'
+    # Tag pushes and branch deletions don't need a sync
+    if not ref.startswith("refs/heads/") or payload.get("deleted"):
+        return
     repo_full_name = payload.get("repository", {}).get("full_name")
-    branch = ref.split("refs/heads/")[1]
+    branch = ref.removeprefix("refs/heads/")
     org, _, repo = repo_full_name.partition("/")
     matching_stacks = db.session.scalars(
         sa.select(Stack).where(
