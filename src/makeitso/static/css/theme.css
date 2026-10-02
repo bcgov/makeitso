@@ -137,14 +137,14 @@ body:has(#commits.syncing) #sync-form button {
   white-space: pre-wrap;
 }
 
-/* The logo's rocket, flies out of its square to the top right, and comes back in from the
+/* The logo's ship flies out of its square to the top right, and comes back in from the
    bottom left. Hovering the logo or the navbar brand around it starts it */
 .app-logo {
   overflow: visible;
 }
 
-.app-logo:hover .app-logo-rocket,
-.navbar-brand:hover .app-logo-rocket {
+.app-logo:hover .app-logo-ship,
+.navbar-brand:hover .app-logo-ship {
   animation: fly-out 1.4s ease-in-out;
 }
 
