@@ -19,9 +19,9 @@ never wait on GitHub.
 
 1. Runs when a stack is created, when someone presses Sync, when GitHub reports a push to the
    stack's branch, and in the background (below).
-2. The sync is queued as a background job; a stack never has two syncs at once. A push that
-   arrives while a sync is running queues one more sync to run after it, so new commits
-   aren't missed.
+2. The sync is queued as a background job on the `syncs` queue, which has its own worker so
+   deploys don't hold it up; a stack never has two syncs at once. A push that arrives while a
+   sync is running queues one more sync to run after it, so new commits aren't missed.
 3. The worker, using the server's GitHub token:
    - saves the commits and replaces their checks
      (see [github](../github/README.md) for which commits)
@@ -37,7 +37,7 @@ never wait on GitHub.
 Keeps stacks up to date when nobody presses Sync, without hitting GitHub more than needed.
 
 - The `stack-sync` CronJob runs `flask stacks sync` every 10 minutes
-  (`stackSync.schedule` in the Helm values). It only queues syncs; the worker does them.
+  (`stackSync.schedule` in the Helm values). It only queues syncs; the sync worker does them.
 - Only stacks that haven't synced successfully in the last 30 minutes are picked. Each stack
   saves when its last successful sync was, so a manual Sync also resets the clock.
 - Each stack also counts its failed syncs in a row. After 5, background syncs skip it (a repo

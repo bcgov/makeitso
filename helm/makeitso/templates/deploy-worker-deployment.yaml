@@ -1,29 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "makeitso.fullname" . }}-worker
+  name: {{ include "makeitso.fullname" . }}-deploy-worker
   labels:
-    component: worker
+    component: deploy-worker
 {{- include "makeitso.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.worker.replicas }}
+  replicas: {{ .Values.deployWorker.replicas }}
   selector:
     matchLabels:
       {{- include "makeitso.selectorLabels" . | nindent 6 }}
-      component: worker
+      component: deploy-worker
   template:
     metadata:
       labels:
 {{- include "makeitso.selectorLabels" . | nindent 8 }}
-        component: worker
+        component: deploy-worker
     spec:
       restartPolicy: Always
       serviceAccountName: {{ .Release.Name }}-deployer
       containers:
-        - name: {{ template "makeitso.fullname" . }}-worker
+        - name: {{ template "makeitso.fullname" . }}-deploy-worker
           image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}
           imagePullPolicy: {{ .Values.app.imagePullPolicy }}
-          command: ["flask", "--app", "makeitso", "worker"]
+          # Syncs have their own worker, see sync-worker-deployment.yaml
+          command: ["flask", "--app", "makeitso", "worker", "--queue", "deploys"]
           env:
             {{- include "makeitso.commonEnv" . | nindent 12 }}
             {{- include "makeitso.superuserDbEnv" . | nindent 12 }}

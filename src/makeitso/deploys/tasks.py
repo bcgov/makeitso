@@ -61,7 +61,7 @@ def start_deploy(
     )
     db.session.add(deploy)
     db.session.commit()
-    job_queue.queue.enqueue(
+    job_queue.deploys.enqueue(
         run_deploy,
         deploy.id,
         job_id=_job_id(deploy.id),
@@ -78,7 +78,7 @@ def fail_if_lost(deploy: Deploy) -> None:
     records its result; record it here so the stack isn't blocked"""
     if deploy.status is not DeployStatus.IN_PROGRESS:
         return
-    job = job_queue.queue.fetch_job(_job_id(deploy.id))
+    job = job_queue.deploys.fetch_job(_job_id(deploy.id))
     status = job.get_status() if job is not None else None
     # Someone stopped it with RQ's own tools: that's an abort, not a failure
     if status in (JobStatus.STOPPED, JobStatus.CANCELED):
@@ -96,7 +96,7 @@ def signal_job(deploy: Deploy, signal: Literal["cancel", "interrupt"]) -> None:
     if deploy.status is not DeployStatus.IN_PROGRESS:
         raise ValueError("Cannot signal a deploy that is not running")
 
-    job = job_queue.queue.fetch_job(_job_id(deploy.id))
+    job = job_queue.deploys.fetch_job(_job_id(deploy.id))
     if job is None:
         raise ValueError("Cannot signal a deploy with no associated job")
 
@@ -108,7 +108,7 @@ def requested_signal(deploy: Deploy) -> str | None:
     """The stop signal sent to a running deploy, if any"""
     if deploy.status is not DeployStatus.IN_PROGRESS:
         return None
-    job = job_queue.queue.fetch_job(_job_id(deploy.id))
+    job = job_queue.deploys.fetch_job(_job_id(deploy.id))
     return job.meta.get("signal") if job else None
 
 
@@ -293,7 +293,7 @@ def _watch(proc: subprocess.Popen, timeout: int, job_id: str) -> dict[str, Deplo
     # daemon=True: Python doesn't wait for it on exit, so if our code crashes,
     # the watcher can't keep the job alive;
     # cutting it off is harmless, it only sends signals and never writes to the DB
-    threading.Thread(target=watch, daemon=True, args=[job_queue.queue]).start()
+    threading.Thread(target=watch, daemon=True, args=[job_queue.deploys]).start()
     return stopped
 
 

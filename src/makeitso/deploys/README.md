@@ -13,7 +13,8 @@ picked for a stack's environment.
 ## How a deploy runs
 
 Deploys always run on a background worker. Whatever starts one (today, the Deploy button) saves
-the deploy and puts a job on the Redis queue, and a worker picks it up.
+the deploy and puts a job on the `deploys` Redis queue, and a worker picks it up. Syncs have
+their own queue and worker, so a long deploy and a batch of syncs never wait on each other.
 
 1. **Deploy page.** Reads the engage file at the chosen commit through the GitHub API, without
    checking anything out. Shows the commits since the last successful deploy, the review
