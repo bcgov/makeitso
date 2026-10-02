@@ -106,14 +106,16 @@
   display: none !important;
 }
 
-/* Sync button spinner: shown from the click until the background sync is done */
-.sync-spinner {
-  display: none;
+/* Sync button icon spins from the click until the background sync is done */
+#sync-form.htmx-request .sync-icon,
+body:has(#commits.syncing) .sync-icon {
+  animation: sync-spin 1s linear infinite;
 }
 
-#sync-form.htmx-request .sync-spinner,
-body:has(#commits.syncing) .sync-spinner {
-  display: inline-block;
+@keyframes sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Look and act disabled while syncing; extra clicks would be ignored by the server anyway */

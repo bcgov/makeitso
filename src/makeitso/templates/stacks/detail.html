@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "stacks/_tabs.html" import stack_tabs %}
+{% from "bootstrap5/utils.html" import render_icon %}
 
 {% set title = stack.repository ~ " " ~ stack.environment %}
 
@@ -12,13 +13,13 @@
           hx-target="#commits" hx-swap="outerHTML">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-sm btn-primary border-light d-inline-flex align-items-center gap-2">
-            <span class="spinner-border spinner-border-sm sync-spinner" aria-hidden="true"></span>
+            {{ render_icon("arrow-repeat", classes="sync-icon") }}
             Sync
         </button>
     </form>
-    <a class="btn btn-sm btn-outline-light"
+    <a class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-2"
        href="https://github.com/{{ stack.organization }}/{{ stack.repository }}/tree/{{ stack.branch }}"
-       target="_blank" rel="noopener">View on GitHub</a>
+       target="_blank" rel="noopener">{{ render_icon("github") }} View on GitHub</a>
 {% endblock %}
 
 {% block content %}

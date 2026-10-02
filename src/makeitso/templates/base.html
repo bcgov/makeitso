@@ -1,4 +1,5 @@
 {% from "_logo.html" import logo %}
+{% from "bootstrap5/utils.html" import render_icon %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -28,7 +29,7 @@
             {{ session.user.login }}@github
             <form method="post" action="{{ url_for('auth.logout') }}" class="d-inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-primary border-light ms-3">Logout</button>
+              <button type="submit" class="btn btn-primary border-light ms-3 d-inline-flex align-items-center gap-2">{{ render_icon("box-arrow-right") }} Logout</button>
             </form>
           </div>
         {# The landing page has its own big login button #}
