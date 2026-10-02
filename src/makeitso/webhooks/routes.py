@@ -8,6 +8,12 @@ from flask import Blueprint, abort, current_app, request
 from makeitso.extensions import csrf, db
 from makeitso.models.stack import Stack
 from makeitso.stacks.tasks import enqueue_sync
+from makeitso.models.commit import Commit
+from makeitso.models.deploy import Deploy
+from makeitso.deploys.tasks import start_deploy
+from makeitso.github import GitHubRepo, github_client
+from makeitso.engage.loader import load_config
+from makeitso.deploys.helpers import deploy_blockers
 
 bp = Blueprint("webhooks", __name__)
 
@@ -24,7 +30,7 @@ def verify_signature(payload, signature):
     # Calculate local signature
     mac = hmac.new(secret.encode(), msg=payload, digestmod=hashlib.sha256)
     return hmac.compare_digest(mac.hexdigest(), signature_hex)
-
+        
 
 def handle_push_event(payload):
     ref = payload.get("ref", "")  # e.g., 'refs/heads/main'
@@ -43,6 +49,44 @@ def handle_push_event(payload):
         current_app.logger.info("Push to %s/%s, syncing stack %s", repo_full_name, branch, s.id)
         enqueue_sync(s.id, followup=True)
 
+def handle_completed_check_suite(payload):
+    repo_full_name = payload.get("repository", {}).get("full_name")
+    branch = payload.get("check_suite", {}).get("head_branch")
+    org, _, repo = repo_full_name.partition("/")
+    matching_stacks = db.session.scalars(
+        sa.select(Stack).where(
+            Stack.organization == org, Stack.repository == repo, Stack.branch == branch, Stack.archived_at == None
+        )
+    )
+    for s in matching_stacks:
+        print(f"Check Suite Completed for {repo_full_name}/{branch}, syncing stack {s.id}")
+        enqueue_sync(s.id, followup=True) # This could be removed after adding a handle_completed_check_run() that updates the individual check_status records
+        # Trigger continuous deployment
+        if s.continuous_deploy:
+            last_deploy = db.session.scalar(sa.select(Deploy).where(Deploy.stack_id == s.id).order_by(Deploy.id.desc()).limit(1))
+            latest_commit = db.session.scalar(sa.select(Commit).where(Commit.stack_id == s.id).order_by(Commit.id.desc()).limit(1))
+            if last_deploy:
+                if last_deploy.commit_id == latest_commit.id:
+                    # Do not deploy: Commit already deployed
+                    return
+                if last_deploy.status == 'IN_PROGRESS':
+                    # Do not deploy: A deploy is in progress
+                    return
+            repo = GitHubRepo.for_stack(github_client(current_app.config["GITHUB_TOKEN"]), s)
+            config, _ = load_config(repo, latest_commit.commit_sha, s.environment)
+            allowed = config.ci.allow_failures
+            blockers = deploy_blockers(s, latest_commit, allowed)
+            if blockers:
+                # Do not Deploy: Deploy is blocked
+                return
+            if latest_commit.checks_state == "success":
+                start_deploy(
+                    s,
+                    latest_commit,
+                    config.deploy.timeout,
+                    "Continuous Deploy"
+
+                )
 
 @bp.route("/webhook-receiver", methods=["POST"])
 @csrf.exempt
@@ -60,5 +104,10 @@ def receive_github_webhook():
     # Handle Push Events
     if event_type == "push":
         handle_push_event(payload)
+
+    if event_type == "check_suite":
+        status = payload.get("check_suite", {}).get("status")
+        if status == "completed":
+            handle_completed_check_suite(payload)
 
     return json.dumps({"success": True}), 200

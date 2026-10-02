@@ -16,6 +16,6 @@ GIT_COMMIT=$(git rev-parse HEAD)
 helm upgrade -n "$NAMESPACE_PREFIX-tools" \
   --install --rollback-on-failure  \
   --timeout 10m \
-  --set app.imageTag="$GIT_COMMIT" \
+  --set app.imageTag="pr-35" \
   makeitso ./helm/makeitso
 
