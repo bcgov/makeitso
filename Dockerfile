@@ -20,6 +20,8 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
+# Get helm from the official docker image
+FROM alpine/helm:4 AS helm-source
 
 # Then, use a final image without uv
 FROM python:3.14-slim-trixie
@@ -29,7 +31,7 @@ FROM python:3.14-slim-trixie
 
 # git for the deploy checkout (bin/checkout.sh); tools a repo's deploy script needs are its own choice
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends git ca-certificates \
+    && apt-get install --yes --no-install-recommends build-essential git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Setup a non-root user
@@ -38,6 +40,13 @@ RUN groupadd --system --gid 1001 nonroot \
 
 # Copy the application from the builder
 COPY --from=builder --chown=nonroot:nonroot /app /app
+
+# Import and validate additional tools
+COPY --from=helm-source /usr/bin/helm /usr/local/bin/helm
+
+RUN helm version
+RUN make --version
+RUN git --version
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
