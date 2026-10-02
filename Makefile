@@ -29,6 +29,7 @@ help:
 	@echo "make lint           Check code style and common mistakes (ruff)"
 	@echo "make format         Auto-format code and fix lint issues (ruff)"
 	@echo "make typecheck      Check types (ty)"
+	@echo "make test           Run the tests against the mis_test database: ARGS='-k name' to filter"
 	@echo "make vendor         Download pinned front-end libraries into static/vendor"
 
 .PHONY: uv
@@ -130,6 +131,12 @@ format:
 .PHONY: typecheck
 typecheck:
 	$(UV) run ty check
+
+# Tests use their own database (mis_test), created here if missing
+.PHONY: test
+test:
+	$(MAKE) create_db DB_NAME=mis_test
+	$(UV) run --env-file .env pytest $(ARGS)
 
 .PHONY: vendor
 vendor:
