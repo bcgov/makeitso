@@ -41,10 +41,12 @@ RUN groupadd --system --gid 1001 nonroot \
 # Copy the application from the builder
 COPY --from=builder --chown=nonroot:nonroot /app /app
 
-# Import additional tools
+# Import and validate additional tools
 COPY --from=helm-source /usr/bin/helm /usr/local/bin/helm
 
 RUN helm version
+RUN make --version
+RUN git --version
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
