@@ -6,8 +6,10 @@ import threading
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Literal
 
 from flask import current_app
+from rq import Queue
 from rq.job import Job, JobStatus
 
 from makeitso.deploys.queries import last_successful_deploy
@@ -24,8 +26,8 @@ from makeitso.models.stack import Stack
 CHECKOUT_TIMEOUT = 2 * 60
 # Seconds between saves of new output
 SAVE_EVERY = 1
-# After SIGTERM on timeout, seconds to wait before SIGKILL
-STOP_GRACE = 30
+# After SIGTERM, seconds to wait before SIGKILL; long, since the script may be rolling back
+DEPLOY_TIMEOUT = 1800
 # A running job with no worker heartbeat for this long, lost its worker
 HEARTBEAT_LIMIT = timedelta(minutes=2)
 
@@ -62,7 +64,7 @@ def start_deploy(
         # The Deploy row keeps status and output, so the job isn't needed afterward
         result_ttl=0,
         # Our worst case (both steps, each with its grace) + 60s slack, so our timeouts fire first
-        job_timeout=CHECKOUT_TIMEOUT + timeout + 2 * STOP_GRACE + 60,
+        job_timeout=CHECKOUT_TIMEOUT + timeout + 2 * DEPLOY_TIMEOUT + 60,
     )
     return deploy
 
@@ -79,6 +81,27 @@ def fail_if_lost(deploy: Deploy) -> None:
         _finish(deploy, DeployStatus.ABORTED, "\nThe job was stopped from RQ\n")
     elif job is None or status is JobStatus.FAILED or _worker_gone(job):
         _finish(deploy, DeployStatus.FAILED, "\nThe worker stopped before the deploy finished\n")
+
+
+def signal_job(deploy: Deploy, signal: Literal["cancel", "interrupt"]) -> None:
+    """Ask a running deploy's watcher to stop it: cancel lets it clean up, interrupt kills it"""
+    if deploy.status is not DeployStatus.IN_PROGRESS:
+        raise ValueError("Cannot signal a deploy that is not running")
+
+    job = job_queue.queue.fetch_job(_job_id(deploy.id))
+    if job is None:
+        raise ValueError("Cannot signal a deploy with no associated job")
+
+    job.meta["signal"] = signal
+    job.save_meta()
+
+
+def requested_signal(deploy: Deploy) -> str | None:
+    """The stop signal sent to a running deploy, if any"""
+    if deploy.status is not DeployStatus.IN_PROGRESS:
+        return None
+    job = job_queue.queue.fetch_job(_job_id(deploy.id))
+    return job.meta.get("signal") if job else None
 
 
 def _finish(deploy: Deploy, status: DeployStatus, message: str) -> None:
@@ -125,7 +148,7 @@ def run_deploy(deploy_id: int) -> None:
     workdir = Path(current_app.config["DEPLOY_WORKSPACE"]) / f"deploy-{deploy.id}"
     log = _Log(deploy)
     try:
-        # Each step blocks until it ends and returns SUCCEEDED, FAILED or TIMED_OUT
+        # Each step blocks until it ends and returns its DeployStatus
         deploy.status = _run(deploy, workdir, log)
         # Show the outcome at the end of the log, where the user is looking
         if deploy.status is not DeployStatus.SUCCEEDED:
@@ -145,14 +168,17 @@ def run_deploy(deploy_id: int) -> None:
 def _run(deploy: Deploy, workdir: Path, log: _Log) -> DeployStatus:
     """Check out the commit, then run the deploy script that its engage.yaml names"""
     env = _script_env(deploy, workdir)
-    status = _stream(["bash", "bin/checkout.sh"], env, log, CHECKOUT_TIMEOUT)
+    job_id = _job_id(deploy.id)
+    status = _stream(["bash", "bin/checkout.sh"], env, log, CHECKOUT_TIMEOUT, job_id)
     if status is not DeployStatus.SUCCEEDED:
         return status
     config, name = _read_config(workdir, deploy.stack.environment)
     log.write(f"\nSettings from {name}\n" if name else "\nNo engage.yaml, using the defaults\n")
     log.write(f"\n$ bash {config.deploy.file}  (timeout {config.deploy.timeout}s)\n")
     # Run from the checkout, so the script's relative paths work
-    return _stream(["bash", config.deploy.file], env, log, config.deploy.timeout, cwd=workdir)
+    return _stream(
+        ["bash", config.deploy.file], env, log, config.deploy.timeout, job_id, cwd=workdir
+    )
 
 
 def _read_config(workdir: Path, environment: str) -> tuple[EngageConfig, str | None]:
@@ -167,7 +193,12 @@ def _read_config(workdir: Path, environment: str) -> tuple[EngageConfig, str | N
 
 
 def _stream(
-    args: list[str], env: dict[str, str], log: _Log, timeout: int, cwd: Path | None = None
+    args: list[str],
+    env: dict[str, str],
+    log: _Log,
+    timeout: int,
+    job_id: str,
+    cwd: Path | None = None,
 ) -> DeployStatus:
     """Run a command, write each output line to the log, and return how it ended"""
     # `with` closes the output pipe and waits for the exit code when the block ends
@@ -187,7 +218,7 @@ def _stream(
         assert proc.stdout is not None  # Just to make typing happy
 
         # Starts the timeout clock in the background
-        stopped = _watch(proc, timeout)
+        stopped = _watch(proc, timeout, job_id)
         # Each line arrives as soon as the command prints it; the loop ends when the command exits
         for line in proc.stdout:
             log.write(line)
@@ -198,8 +229,9 @@ def _stream(
     return DeployStatus.SUCCEEDED if proc.returncode == 0 else DeployStatus.FAILED
 
 
-def _watch(proc: subprocess.Popen, timeout: int) -> dict[str, DeployStatus]:
-    """Stops the command on timeout: SIGTERM, then SIGKILL if it's still running.
+def _watch(proc: subprocess.Popen, timeout: int, job_id: str) -> dict[str, DeployStatus]:
+    """Stops the command on timeout or cancel: SIGTERM, then SIGKILL if it's still running.
+    On interrupt, SIGKILL right away.
     Returns a dict that gets a "status" once it stopped the command"""
     stopped: dict[str, DeployStatus] = {}
     deadline = time.monotonic() + timeout
@@ -212,19 +244,35 @@ def _watch(proc: subprocess.Popen, timeout: int) -> dict[str, DeployStatus]:
             # Already exited between our check and the signal
             pass
 
-    def watch() -> None:
+    def watch(queue: Queue) -> None:
         termed_at = None
         # poll() is None while the command is still running
         while proc.poll() is None:
             time.sleep(1)
-            if time.monotonic() < deadline:
-                continue
-            stopped["status"] = DeployStatus.TIMED_OUT
+
+            try:
+                job = queue.fetch_job(job_id)
+                sig = job.meta.get("signal") if job else None
+            except Exception:
+                sig = None
+            match sig:
+                case "cancel":
+                    stopped["status"] = DeployStatus.CANCELLED
+                case "interrupt":
+                    stopped["status"] = DeployStatus.INTERRUPTED
+                    send(signal.SIGKILL)
+                    continue
+                case _:
+                    if time.monotonic() < deadline:
+                        continue
+                    stopped["status"] = DeployStatus.TIMED_OUT
+
             if termed_at is None:
-                # First, ask it to stop, so the script can clean up
+                # First, ask it to stop, so the script can clean up.
+                # For helm upgrade commands, this can trigger a long rollback.
                 termed_at = time.monotonic()
                 send(signal.SIGTERM)
-            elif time.monotonic() - termed_at > STOP_GRACE:
+            elif time.monotonic() - termed_at > DEPLOY_TIMEOUT:
                 # Still running after the grace period: force it
                 send(signal.SIGKILL)
 
@@ -232,7 +280,7 @@ def _watch(proc: subprocess.Popen, timeout: int) -> dict[str, DeployStatus]:
     # daemon=True: Python doesn't wait for it on exit, so if our code crashes,
     # the watcher can't keep the job alive;
     # cutting it off is harmless, it only sends signals and never writes to the DB
-    threading.Thread(target=watch, daemon=True).start()
+    threading.Thread(target=watch, daemon=True, args=[job_queue.queue]).start()
     return stopped
 
 

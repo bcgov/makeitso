@@ -1,3 +1,5 @@
+from typing import Literal
+
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from flask import flash, redirect, render_template, request, session, url_for
@@ -7,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from makeitso.auth.decorators import requires_auth
 from makeitso.deploys.helpers import checks_failed, deploy_blockers, emergency_mode
 from makeitso.deploys.queries import commits_between, current_deploy, last_successful_deploy
-from makeitso.deploys.tasks import fail_if_lost, start_deploy
+from makeitso.deploys.tasks import fail_if_lost, requested_signal, signal_job, start_deploy
 from makeitso.engage import EngageConfig, EngageConfigError
 from makeitso.engage.loader import load_config
 from makeitso.extensions import db
@@ -115,7 +117,11 @@ class NewDeployView(MethodView):
         bypass = emergency and checks_failed(commit, allowed)
         try:
             deploy = start_deploy(
-                stack, commit, config.deploy.timeout, session["user"]["login"], bypass=bypass
+                stack,
+                commit,
+                config.deploy.timeout,
+                session["user"]["login"],
+                bypass=bypass,
             )
         except IntegrityError:
             # A double-click: the other request started a deploy between our check and the save,
@@ -128,7 +134,24 @@ class NewDeployView(MethodView):
 class DeployView(MethodView):
     @requires_auth
     def get(self, stack_id: int, deploy_id: int):
-        return render_template("deploys/detail.html", deploy=_get_deploy(stack_id, deploy_id))
+        deploy = _get_deploy(stack_id, deploy_id)
+        return render_template(
+            "deploys/detail.html", deploy=deploy, signal=requested_signal(deploy)
+        )
+
+
+class SignalView(MethodView):
+    def __init__(self, signal: Literal["cancel", "interrupt"]):
+        self.signal = signal
+
+    @requires_auth
+    def post(self, stack_id: int, deploy_id: int):
+        deploy = _get_deploy(stack_id, deploy_id)
+        try:
+            signal_job(deploy, self.signal)
+        except ValueError as exc:
+            flash(str(exc), "warning")
+        return redirect(url_for("stacks.deploys.detail", stack_id=stack_id, deploy_id=deploy_id))
 
 
 class DeployLogView(MethodView):
@@ -139,7 +162,10 @@ class DeployLogView(MethodView):
         deploy = _get_deploy(stack_id, deploy_id)
         offset = request.args.get("offset", 0, type=int)
         html = render_template(
-            "deploys/_log_update.html", deploy=deploy, chunk=deploy.output[offset:]
+            "deploys/_log_update.html",
+            deploy=deploy,
+            chunk=deploy.output[offset:],
+            signal=requested_signal(deploy),
         )
         # 286 tells HTMX to stop polling; the text is still added to the log
         return html, 200 if deploy.status is DeployStatus.IN_PROGRESS else 286

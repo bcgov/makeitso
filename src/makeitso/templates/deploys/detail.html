@@ -36,7 +36,10 @@
     {% if deploy.deployed_with_bypass %}
         <div class="alert alert-warning">Deployed in emergency mode: some CI checks had failed</div>
     {% endif %}
+
     {{ commit_range(stack, deploy.since_commit or deploy.commit, deploy.commit) }}
+
+    {% include "deploys/_stop_buttons.html" %}
     {% include "deploys/_progress.html" %}
     {#
       The saved output from the database. The box asks for new text right away ("load") and, while the

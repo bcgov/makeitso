@@ -1,7 +1,8 @@
 {# `live` gives the badge an id; on the deploy page, the poll answer's badge replaces this one by that id (hx-swap-oob) #}
 {% macro status_badge(status, live=False, oob=False) %}
     {% set colors = {"SUCCEEDED": "success", "FAILED": "danger", "IN_PROGRESS": "secondary",
-                     "TIMED_OUT": "warning", "ABORTED": "dark"} %}
+                     "TIMED_OUT": "warning", "ABORTED": "dark", "CANCELLED": "info",
+                     "INTERRUPTED": "primary"} %}
     <span {% if live %}id="deploy-status"{% endif %} {% if oob %}hx-swap-oob="true"{% endif %}
           class="badge text-bg-{{ colors[status.name] }}">
         {{ status.value }}{% if status.name == "IN_PROGRESS" %}…{% endif %}

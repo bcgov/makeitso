@@ -18,6 +18,8 @@ class DeployStatus(enum.Enum):
     IN_PROGRESS = "In Progress"
     TIMED_OUT = "Timed Out"
     ABORTED = "Aborted"
+    CANCELLED = "Cancelled"
+    INTERRUPTED = "Interrupted"
 
 
 class Deploy(db.Model):
