@@ -10,10 +10,19 @@
         <p class="small text-muted mb-2">Sync queued, waiting for a background worker…</p>
     {% elif sync.active %}
         <p class="small text-muted mb-2">Syncing with GitHub…</p>
+    {% else %}
+        <p class="small text-muted mb-2">
+            {% if stack.synced_at %}Last synced {{ stack.synced_at.strftime("%b %d, %Y %H:%M") }}{% else %}Never synced{% endif %}
+        </p>
     {% endif %}
 
     {% if sync.error %}
         <div class="alert alert-danger">{{ sync.error }}</div>
+    {% endif %}
+    {% if stack.sync_paused and not sync.active %}
+        <div class="alert alert-warning">
+            Background syncs are paused after {{ stack.sync_failures }} failed syncs in a row. Press Sync to try again.
+        </div>
     {% endif %}
 
     {% if current_deploy %}

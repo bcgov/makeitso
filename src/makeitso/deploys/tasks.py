@@ -181,11 +181,7 @@ def _run(deploy: Deploy, workdir: Path, log: _Log) -> DeployStatus:
     if status is not DeployStatus.SUCCEEDED:
         return status
     config, name = _read_config(workdir, deploy.stack.environment)
-    log.write(
-        f"\nSettings from {name}\n"
-        if name
-        else "\nNo engage.yaml, using the defaults\n"
-    )
+    log.write(f"\nSettings from {name}\n" if name else "\nNo engage.yaml, using the defaults\n")
     log.write(f"\n$ bash {config.deploy.file}  (timeout {config.deploy.timeout}s)\n")
     # Run from the checkout, so the script's relative paths work
     return _stream(
@@ -246,9 +242,7 @@ def _stream(
     return DeployStatus.SUCCEEDED if proc.returncode == 0 else DeployStatus.FAILED
 
 
-def _watch(
-    proc: subprocess.Popen, timeout: int, job_id: str
-) -> dict[str, DeployStatus]:
+def _watch(proc: subprocess.Popen, timeout: int, job_id: str) -> dict[str, DeployStatus]:
     """Stops the command on timeout or cancel: SIGTERM, then SIGKILL if it's still running.
     On interrupt, SIGKILL right away.
     Returns a dict that gets a "status" once it stopped the command"""
@@ -329,7 +323,7 @@ def _script_env(deploy: Deploy, workdir: Path) -> dict[str, str]:
     # Set last, so a stack's env vars can't override these
     env.update(
         {
-            **{var: os.environ.get(var) for var in JOB_ENV_ALLOWLIST},
+            **{var: os.environ[var] for var in JOB_ENV_ALLOWLIST if var in os.environ},
             "WORKDIR": str(workdir),
             "COMMIT_SHA": deploy.commit.commit_sha,
             "STACK_ORG": deploy.stack.organization,

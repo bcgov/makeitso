@@ -1,17 +1,21 @@
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
+import sqlalchemy as sa
 from github import GithubException
 from rq import get_current_job
 from rq.exceptions import DuplicateJobError
-from rq.job import JobStatus
+from rq.job import Dependency, JobStatus
 
 from makeitso.extensions import db, job_queue
 from makeitso.github import GitHubError, GitHubRepo, client_for_server
-from makeitso.models.stack import Stack
+from makeitso.models.stack import MAX_SYNC_FAILURES, Stack
 from makeitso.stacks.sync import save_allow_failures, sync_commits
 
 # Job states that mean a sync is waiting for a worker or running
 ACTIVE_STATUSES = {JobStatus.QUEUED, JobStatus.STARTED, JobStatus.DEFERRED, JobStatus.SCHEDULED}
+# A stack not synced for this long gets a background sync
+SYNC_STALE_AFTER = timedelta(minutes=30)
 
 
 @dataclass(frozen=True)
@@ -35,18 +39,37 @@ def sync_stack(stack_id: int) -> None:
         repo = GitHubRepo.for_stack(client_for_server(), stack)
         sync_commits(stack, repo)
         save_allow_failures(stack, repo)
-    except (GithubException, GitHubError) as exc:
-        # Save a readable message for the page, then fail the job as usual
-        job = get_current_job()
-        if job is not None:
-            job.meta["error"] = _error_message(exc)
-            job.save_meta()
+    except Exception as exc:
+        # Count it, so background syncs stop retrying a stack that keeps failing
+        db.session.rollback()
+        stack.sync_failures += 1
+        db.session.commit()
+        if isinstance(exc, (GithubException, GitHubError)):
+            # Save a readable message for the page, then fail the job as usual
+            job = get_current_job()
+            if job is not None:
+                job.meta["error"] = _error_message(exc)
+                job.save_meta()
         raise
+    stack.synced_at = datetime.now(UTC)
+    stack.sync_failures = 0
+    db.session.commit()
 
 
-def enqueue_sync(stack_id: int) -> None:
-    """Queue a sync for the stack, unless one is already waiting or running"""
+def enqueue_sync(stack_id: int, followup: bool = False) -> None:
+    """Queue a sync for the stack, unless one is already waiting or running. With followup, a
+    running sync gets one more queued after it (for pushes that may have landed mid-sync)"""
     job_id = _job_id(stack_id)
+    running = job_queue.queue.fetch_job(job_id)
+    if followup and running is not None and running.get_status() == JobStatus.STARTED:
+        # The running sync may have read the old head, so queue one more after it, even if it fails
+        after = Dependency(jobs=[running], allow_failure=True)
+        _enqueue(stack_id, f"{job_id}-followup", depends_on=after)
+        return
+    _enqueue(stack_id, job_id)
+
+
+def _enqueue(stack_id: int, job_id: str, depends_on: Dependency | None = None) -> None:
     existing = job_queue.queue.fetch_job(job_id)
     if existing is not None:
         if existing.get_status() in ACTIVE_STATUSES:
@@ -58,8 +81,10 @@ def enqueue_sync(stack_id: int) -> None:
             sync_stack,
             stack_id,
             job_id=job_id,
-            # Fails instead of adding a second job if another request just queued one
-            unique=True,
+            depends_on=depends_on,
+            # Fails instead of adding a second job if another request just queued one. RQ
+            # doesn't allow it with depends_on; a racing follow-up just reuses the same id
+            unique=depends_on is None,
             # Finished jobs are deleted right away; failed ones stay a day to show the error
             result_ttl=0,
             failure_ttl=24 * 60 * 60,
@@ -67,6 +92,21 @@ def enqueue_sync(stack_id: int) -> None:
     except DuplicateJobError:
         # Another request queued it first
         pass
+
+
+def enqueue_stale_syncs() -> int:
+    """Queue a sync for each stack not synced in SYNC_STALE_AFTER, skipping stacks whose syncs
+    keep failing. Run by the stack-sync CronJob; returns how many stacks were picked"""
+    cutoff = datetime.now(UTC) - SYNC_STALE_AFTER
+    stacks = db.session.scalars(
+        Stack.active().where(
+            sa.or_(Stack.synced_at.is_(None), Stack.synced_at < cutoff),
+            Stack.sync_failures < MAX_SYNC_FAILURES,
+        )
+    ).all()
+    for stack in stacks:
+        enqueue_sync(stack.id)
+    return len(stacks)
 
 
 def sync_state(stack_id: int) -> SyncState:

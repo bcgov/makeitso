@@ -11,6 +11,9 @@ if TYPE_CHECKING:
     from makeitso.models.commit import Commit
     from makeitso.models.stack_env_var import StackEnvVar
 
+# Failed syncs in a row before background syncs skip a stack; pressing Sync still works
+MAX_SYNC_FAILURES = 5
+
 
 class Stack(db.Model):
     __table_args__ = (
@@ -57,6 +60,15 @@ class Stack(db.Model):
         server_default="[]",
         comment="Check names from engage.yaml's ci.allow_failures at the branch head, set on sync",
     )
+    synced_at: so.Mapped[datetime | None] = so.mapped_column(
+        sa.DateTime(timezone=True),
+        comment="When the last sync with GitHub succeeded; null if none has",
+    )
+    sync_failures: so.Mapped[int] = so.mapped_column(
+        default=0,
+        server_default="0",
+        comment="Syncs that failed in a row; a successful sync resets it",
+    )
     archived_at: so.Mapped[datetime | None] = so.mapped_column(
         sa.DateTime(timezone=True),
         comment=(
@@ -66,6 +78,11 @@ class Stack(db.Model):
     ## relationships
     stack_env_vars: so.Mapped[list[StackEnvVar]] = so.relationship(back_populates="stack")
     commits: so.Mapped[list[Commit]] = so.relationship(back_populates="stack")
+
+    @property
+    def sync_paused(self) -> bool:
+        """Background syncs have given up on this stack until a sync succeeds"""
+        return self.sync_failures >= MAX_SYNC_FAILURES
 
     @classmethod
     def active(cls) -> sa.Select[Self]:

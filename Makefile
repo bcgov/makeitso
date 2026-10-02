@@ -18,6 +18,7 @@ help:
 	@echo "make redis-install  Install Redis with Homebrew if it is not already installed"
 	@echo "make redis          Run a local Redis server (installs it first if needed)"
 	@echo "make worker         Run a background job worker (RQ)"
+	@echo "make sync_stacks    Queue syncs for stale stacks, like the CronJob does"
 	@echo "make create_db      Create the $(DB_NAME) database if it does not exist"
 	@echo "make init_db        Initialise the migrations folder (already done in this repo)"
 	@echo "make migrate        Generate a migration: make migrate ARGS='-m \"message\"'"
@@ -72,6 +73,11 @@ redis: redis-install
 # OBJC_...=YES stops macOS from killing each job's forked process (ignored on Linux)
 worker:
 	OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES $(FLASK) worker
+
+# Queue syncs for stacks not synced in a while; a running worker does the syncing
+.PHONY: sync_stacks
+sync_stacks:
+	$(FLASK) stacks sync
 
 .PHONY: create_db
 create_db:
