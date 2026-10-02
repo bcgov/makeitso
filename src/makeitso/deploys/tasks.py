@@ -323,7 +323,7 @@ def _script_env(deploy: Deploy, workdir: Path) -> dict[str, str]:
     # Set last, so a stack's env vars can't override these
     env.update(
         {
-            **{var: os.environ.get(var) for var in JOB_ENV_ALLOWLIST},
+            **{var: os.environ[var] for var in JOB_ENV_ALLOWLIST if var in os.environ},
             "WORKDIR": str(workdir),
             "COMMIT_SHA": deploy.commit.commit_sha,
             "STACK_ORG": deploy.stack.organization,
