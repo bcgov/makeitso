@@ -43,7 +43,9 @@ COPY --from=builder --chown=nonroot:nonroot /app /app
 
 # Setup and validate additional tools
 COPY --from=helm-source /usr/bin/helm /usr/local/bin/helm
-ENV HELM_CONFIG_HOME=/workspace/.helm
+ENV HELM_CONFIG_HOME=/workspace/.helm/config
+ENV HELM_CACHE_HOME=/workspace/.helm/cache
+ENV HELM_DATA_HOME=/workspace/.helm/data
 
 RUN helm version
 RUN make --version

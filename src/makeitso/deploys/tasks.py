@@ -40,7 +40,11 @@ def _job_id(deploy_id: int) -> str:
 
 
 def start_deploy(
-    stack: Stack, commit: Commit, timeout: int, deployed_by: str | None, bypass: bool = False
+    stack: Stack,
+    commit: Commit,
+    timeout: int,
+    deployed_by: str | None,
+    bypass: bool = False,
 ) -> Deploy:
     """Save a deploy and queue it for the worker. `timeout` is engage.yaml's deploy.timeout;
     `deployed_by` is a GitHub login (None for continuous deploys)"""
@@ -80,7 +84,11 @@ def fail_if_lost(deploy: Deploy) -> None:
     if status in (JobStatus.STOPPED, JobStatus.CANCELED):
         _finish(deploy, DeployStatus.ABORTED, "\nThe job was stopped from RQ\n")
     elif job is None or status is JobStatus.FAILED or _worker_gone(job):
-        _finish(deploy, DeployStatus.FAILED, "\nThe worker stopped before the deploy finished\n")
+        _finish(
+            deploy,
+            DeployStatus.FAILED,
+            "\nThe worker stopped before the deploy finished\n",
+        )
 
 
 def signal_job(deploy: Deploy, signal: Literal["cancel", "interrupt"]) -> None:
@@ -173,11 +181,20 @@ def _run(deploy: Deploy, workdir: Path, log: _Log) -> DeployStatus:
     if status is not DeployStatus.SUCCEEDED:
         return status
     config, name = _read_config(workdir, deploy.stack.environment)
-    log.write(f"\nSettings from {name}\n" if name else "\nNo engage.yaml, using the defaults\n")
+    log.write(
+        f"\nSettings from {name}\n"
+        if name
+        else "\nNo engage.yaml, using the defaults\n"
+    )
     log.write(f"\n$ bash {config.deploy.file}  (timeout {config.deploy.timeout}s)\n")
     # Run from the checkout, so the script's relative paths work
     return _stream(
-        ["bash", config.deploy.file], env, log, config.deploy.timeout, job_id, cwd=workdir
+        ["bash", config.deploy.file],
+        env,
+        log,
+        config.deploy.timeout,
+        job_id,
+        cwd=workdir,
     )
 
 
@@ -229,7 +246,9 @@ def _stream(
     return DeployStatus.SUCCEEDED if proc.returncode == 0 else DeployStatus.FAILED
 
 
-def _watch(proc: subprocess.Popen, timeout: int, job_id: str) -> dict[str, DeployStatus]:
+def _watch(
+    proc: subprocess.Popen, timeout: int, job_id: str
+) -> dict[str, DeployStatus]:
     """Stops the command on timeout or cancel: SIGTERM, then SIGKILL if it's still running.
     On interrupt, SIGKILL right away.
     Returns a dict that gets a "status" once it stopped the command"""
@@ -300,7 +319,14 @@ def _script_env(deploy: Deploy, workdir: Path) -> dict[str, str]:
             "ENVIRONMENT": deploy.stack.environment,
             # Python tools print right away instead of buffering, so the log stays live
             "PYTHONUNBUFFERED": "1",
-            # Add more environment variables as needed for running it in the pod
+            # Helm setup
+            "HELM_CONFIG_HOME": os.environ.get(
+                "HELM_CONFIG_HOME", "/workspace/.helm/config"
+            ),
+            "HELM_CACHE_HOME": os.environ.get(
+                "HELM_CACHE_HOME", "/workspace/.helm/cache"
+            ),
+            "HELM_DATA_HOME": os.environ.get("HELM_DATA_HOME", "/workspace/.helm/data"),
         }
     )
     return env
