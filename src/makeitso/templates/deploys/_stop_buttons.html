@@ -1,0 +1,51 @@
+{#
+  Cancel and Interrupt for a running deploy; each button opens its confirm modal. `signal` is the stop already
+  asked for: after a cancel only Interrupt is left (the cleanup can hang), after an interrupt nothing is.
+  The log poll re-sends the buttons out of band, so they go away once the deploy ends; the modals stay outside
+  that box so a poll doesn't close an open one
+#}
+{%- from "bootstrap5/utils.html" import render_icon -%}
+{%- set stop_buttons = [
+    ("cancel", "warning", "stop-circle", "Cancel Deployment", "Stop gracefully: lets the script clean up",
+     "The script gets a chance to clean up before it stops."),
+    ("interrupt", "danger", "x-octagon", "Interrupt Deployment", "Kill immediately: no cleanup",
+     "The script is killed right away, with no cleanup."),
+] -%}
+<div id="deploy-stop" class="d-flex gap-2 pb-3 justify-content-end align-items-center"
+     {% if oob %}hx-swap-oob="true"{% endif %}>
+    {% if deploy.status.name == "IN_PROGRESS" %}
+        {% if signal == "cancel" %}<span class="text-muted small">Cancelling…</span>{% endif %}
+        {% if signal == "interrupt" %}<span class="text-muted small">Interrupting…</span>{% endif %}
+        {% for endpoint, color, icon, label, tooltip, _ in stop_buttons
+              if signal != "interrupt" and signal != endpoint %}
+            <button type="button" class="btn btn-{{ color }} d-inline-flex align-items-center gap-1"
+                    title="{{ tooltip }}" data-bs-toggle="modal" data-bs-target="#stop-{{ endpoint }}">
+                {{ render_icon(icon) }} {{ label }}
+            </button>
+        {% endfor %}
+    {% endif %}
+</div>
+{%- if not oob and deploy.status.name == "IN_PROGRESS" %}
+    {% for endpoint, color, icon, label, _, explanation in stop_buttons %}
+        <div class="modal fade" id="stop-{{ endpoint }}" tabindex="-1"
+             aria-labelledby="stop-{{ endpoint }}-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="stop-{{ endpoint }}-title">{{ label }}?</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">{{ explanation }}</div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep running</button>
+                        <form method="post"
+                              action="{{ url_for('stacks.deploys.' ~ endpoint, stack_id=stack.id, deploy_id=deploy.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-{{ color }}">{{ label }}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
