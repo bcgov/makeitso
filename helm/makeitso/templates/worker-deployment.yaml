@@ -18,6 +18,7 @@ spec:
         component: worker
     spec:
       restartPolicy: Always
+      serviceAccountName: {{ .Release.Name }}-deployer
       containers:
         - name: {{ template "makeitso.fullname" . }}-worker
           image: {{ .Values.app.image }}:{{ .Values.app.imageTag }}

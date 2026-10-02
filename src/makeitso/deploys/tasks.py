@@ -303,15 +303,33 @@ def _watch(
     return stopped
 
 
+# List of environment variables passed to the task
+JOB_ENV_ALLOWLIST = [
+    "KUBERNETES_SERVICE_PORT_HTTPS",
+    "KUBERNETES_SERVICE_PORT",
+    "KUBERNETES_PORT_443_TCP",
+    "KUBERNETES_PORT_443_TCP_PROTO",
+    "KUBERNETES_PORT_443_TCP_ADDR",
+    "KUBERNETES_SERVICE_HOST",
+    "KUBERNETES_PORT",
+    "KUBERNETES_PORT_443_TCP_PORT",
+    "HELM_CONFIG_HOME",
+    "HELM_CACHE_HOME",
+    "HELM_DATA_HOME",
+    "PATH",
+    "HOME",
+]
+
+
 def _script_env(deploy: Deploy, workdir: Path) -> dict[str, str]:
     """Only what the script needs"""
     # The stack's own env vars, from the settings page
     env = {var.key: var.value for var in deploy.stack.stack_env_vars}
+
     # Set last, so a stack's env vars can't override these
     env.update(
         {
-            "PATH": os.environ["PATH"],
-            "HOME": os.environ.get("HOME", "/tmp"),
+            **{var: os.environ.get(var) for var in JOB_ENV_ALLOWLIST},
             "WORKDIR": str(workdir),
             "COMMIT_SHA": deploy.commit.commit_sha,
             "STACK_ORG": deploy.stack.organization,
@@ -319,14 +337,6 @@ def _script_env(deploy: Deploy, workdir: Path) -> dict[str, str]:
             "ENVIRONMENT": deploy.stack.environment,
             # Python tools print right away instead of buffering, so the log stays live
             "PYTHONUNBUFFERED": "1",
-            # Helm setup
-            "HELM_CONFIG_HOME": os.environ.get(
-                "HELM_CONFIG_HOME", "/workspace/.helm/config"
-            ),
-            "HELM_CACHE_HOME": os.environ.get(
-                "HELM_CACHE_HOME", "/workspace/.helm/cache"
-            ),
-            "HELM_DATA_HOME": os.environ.get("HELM_DATA_HOME", "/workspace/.helm/data"),
         }
     )
     return env
