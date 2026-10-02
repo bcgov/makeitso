@@ -3,6 +3,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ .Release.Name }}-deployer
   labels: {{ include "makeitso.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
 rules:
   - verbs:
       - get
@@ -230,6 +232,7 @@ rules:
       - list
       - patch
       - update
+      - watch
     apiGroups:
       - postgres-operator.crunchydata.com
     resources:
