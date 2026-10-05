@@ -15,7 +15,14 @@ COMMIT_LIMIT = 10
 
 # Check states that make a commit's overall state "failure" or "pending"; anything else counts as ok
 FAILED_STATES = {"failure", "cancelled", "timed_out"}
-PENDING_STATES = {"pending", "queued", "in_progress", "waiting", "requested", "action_required"}
+PENDING_STATES = {
+    "pending",
+    "queued",
+    "in_progress",
+    "waiting",
+    "requested",
+    "action_required",
+}
 
 # First line of a GitHub merge commit, e.g. "Merge pull request #12 from org/branch"
 MERGE_HEADLINE = re.compile(r"^Merge pull request #(\d+) from ")

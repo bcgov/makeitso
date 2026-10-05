@@ -36,7 +36,9 @@ class Stack(db.Model):
     repository: so.Mapped[str] = so.mapped_column(
         comment="The repository that this stack deploys from"
     )
-    branch: so.Mapped[str] = so.mapped_column(comment="The branch that this stack deploys from")
+    branch: so.Mapped[str] = so.mapped_column(
+        comment="The branch that this stack deploys from"
+    )
     name: so.Mapped[str] = so.mapped_column(comment="The name of this stack")
     environment: so.Mapped[str] = so.mapped_column(
         comment="The environment that this stack should deploy to"
@@ -76,7 +78,9 @@ class Stack(db.Model):
         ),
     )
     ## relationships
-    stack_env_vars: so.Mapped[list[StackEnvVar]] = so.relationship(back_populates="stack")
+    stack_env_vars: so.Mapped[list[StackEnvVar]] = so.relationship(
+        back_populates="stack"
+    )
     commits: so.Mapped[list[Commit]] = so.relationship(back_populates="stack")
 
     @property
@@ -93,3 +97,6 @@ class Stack(db.Model):
     def active_or_404(cls, stack_id: int) -> Self:
         """The stack for a page; a 404 if it doesn't exist or was deleted"""
         return db.first_or_404(cls.active().where(cls.id == stack_id))
+
+    def __str__(self):
+        return f"{self.organization}/{self.repository}[{self.branch}] (environment={self.environment})"

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from flask import current_app
 import sqlalchemy as sa
 from github import GithubException
 from rq import get_current_job
@@ -10,10 +11,16 @@ from rq.job import Dependency, JobStatus
 from makeitso.extensions import db, job_queue
 from makeitso.github import GitHubError, GitHubRepo, client_for_server
 from makeitso.models.stack import MAX_SYNC_FAILURES, Stack
+from makeitso.stacks.continuous_deployment import check_continuous_deployment
 from makeitso.stacks.sync import save_allow_failures, sync_commits
 
 # Job states that mean a sync is waiting for a worker or running
-ACTIVE_STATUSES = {JobStatus.QUEUED, JobStatus.STARTED, JobStatus.DEFERRED, JobStatus.SCHEDULED}
+ACTIVE_STATUSES = {
+    JobStatus.QUEUED,
+    JobStatus.STARTED,
+    JobStatus.DEFERRED,
+    JobStatus.SCHEDULED,
+}
 # A stack not synced for this long gets a background sync
 SYNC_STALE_AFTER = timedelta(minutes=30)
 
@@ -32,6 +39,9 @@ class SyncState:
 def sync_stack(stack_id: int) -> None:
     """Background job: save a stack's latest commits and checks from GitHub"""
     stack = db.session.scalar(Stack.active().where(Stack.id == stack_id))
+
+    current_app.logger.info("Worker: syncing stack %s", stack)
+
     # The stack may have been deleted (archived) before the job ran
     if stack is None:
         return
@@ -58,7 +68,8 @@ def sync_stack(stack_id: int) -> None:
 
 def enqueue_sync(stack_id: int, followup: bool = False) -> None:
     """Queue a sync for the stack, unless one is already waiting or running. With followup, a
-    running sync gets one more queued after it (for pushes that may have landed mid-sync)"""
+    running sync gets one more queued after it (for pushes that may have landed mid-sync)
+    """
     job_id = _job_id(stack_id)
     running = job_queue.syncs.fetch_job(job_id)
     if followup and running is not None and running.get_status() == JobStatus.STARTED:
@@ -69,7 +80,11 @@ def enqueue_sync(stack_id: int, followup: bool = False) -> None:
     _enqueue(stack_id, job_id)
 
 
-def _enqueue(stack_id: int, job_id: str, depends_on: Dependency | None = None) -> None:
+def _enqueue(
+    stack_id: int,
+    job_id: str,
+    depends_on: Dependency | None = None,
+) -> None:
     existing = job_queue.syncs.fetch_job(job_id)
     if existing is not None:
         if existing.get_status() in ACTIVE_STATUSES:
@@ -77,7 +92,7 @@ def _enqueue(stack_id: int, job_id: str, depends_on: Dependency | None = None) -
         # A failed job keeps its id; remove it so the id is free again
         existing.delete()
     try:
-        job_queue.syncs.enqueue(
+        sync_job = job_queue.syncs.enqueue(
             sync_stack,
             stack_id,
             job_id=job_id,
@@ -86,6 +101,14 @@ def _enqueue(stack_id: int, job_id: str, depends_on: Dependency | None = None) -
             # doesn't allow it with depends_on; a racing follow-up just reuses the same id
             unique=depends_on is None,
             # Finished jobs are deleted right away; failed ones stay a day to show the error
+            result_ttl=0,
+            failure_ttl=24 * 60 * 60,
+        )
+        cd_job = job_queue.syncs.enqueue(
+            check_continuous_deployment,
+            stack_id,
+            job_id=f"{job_id}-cd",
+            depends_on=sync_job,
             result_ttl=0,
             failure_ttl=24 * 60 * 60,
         )
@@ -117,7 +140,9 @@ def sync_state(stack_id: int) -> SyncState:
     if status in ACTIVE_STATUSES:
         return SyncState(status=status.value, error=None)
     if status == JobStatus.FAILED:
-        return SyncState(status=None, error=job.meta.get("error", "The last sync failed"))
+        return SyncState(
+            status=None, error=job.meta.get("error", "The last sync failed")
+        )
     return SyncState(status=None, error=None)
 
 
@@ -128,6 +153,8 @@ def _job_id(stack_id: int) -> str:
 
 def _error_message(exc: Exception) -> str:
     if isinstance(exc, GithubException):
-        message = exc.data.get("message") if isinstance(exc.data, dict) else "unknown error"
+        message = (
+            exc.data.get("message") if isinstance(exc.data, dict) else "unknown error"
+        )
         return f"Could not sync commits from GitHub ({exc.status}): {message}"
     return f"Could not sync commits from GitHub: {exc}"
