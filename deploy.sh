@@ -1,21 +1,10 @@
 #!/bin/bash
+# Test deploy: prints a line a second, deploys nothing
+set -euo pipefail
 
-set -euxo pipefail
-
-if [ -z "${NAMESPACE_PREFIX:-}" ]; then
-  echo "NAMESPACE_PREFIX is not set"
-  exit 1
-fi
-
-echo "Deploying makeitso to namespace $NAMESPACE_PREFIX-tools"
-helm repo add cas-postgres https://bcgov.github.io/cas-postgres/
-helm dep up ./helm/makeitso
-
-GIT_COMMIT=$(git rev-parse HEAD)
-
-helm upgrade -n "$NAMESPACE_PREFIX-tools" \
-  --install --rollback-on-failure  \
-  --timeout 10m \
-  --set app.imageTag="$GIT_COMMIT" \
-  makeitso ./helm/makeitso
-
+echo "Deploying $COMMIT_SHA to $ENVIRONMENT"
+for i in $(seq 1 30); do
+  echo "step $i/30"
+  sleep 2
+done
+echo "Done"
