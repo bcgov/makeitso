@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "bootstrap5/form.html" import render_field %}
+{% from "bootstrap5/utils.html" import render_icon %}
 {% from "stacks/_tabs.html" import stack_tabs %}
 
 {% set title = "Settings " ~ stack.repository ~ " " ~ stack.environment %}
@@ -14,9 +15,9 @@
     <form method="post" action="{{ url_for('stacks.continuous_deploy', stack_id=stack.id) }}" class="mb-5" style="max-width: 40rem" novalidate>
         {{ lock_form.hidden_tag() }}
         {% if stack.continuous_deploy %}
-            <button type="submit" class="btn btn-primary">Disable Continuous Deployment</button>
+            <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2">{{ render_icon("pause-circle") }} Disable Continuous Deployment</button>
         {% else %}
-            <button type="submit" class="btn btn-primary">Enable Continuous Deployment</button>
+            <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2">{{ render_icon("play-circle") }} Enable Continuous Deployment</button>
         {% endif %}
     </form>
 
