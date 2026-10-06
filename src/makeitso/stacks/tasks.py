@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from flask import current_app
 import sqlalchemy as sa
+from flask import current_app
 from github import GithubException
 from rq import get_current_job
 from rq.exceptions import DuplicateJobError
@@ -104,7 +104,7 @@ def _enqueue(
             result_ttl=0,
             failure_ttl=24 * 60 * 60,
         )
-        cd_job = job_queue.syncs.enqueue(
+        job_queue.syncs.enqueue(
             check_continuous_deployment,
             stack_id,
             job_id=f"{job_id}-cd",
@@ -140,9 +140,7 @@ def sync_state(stack_id: int) -> SyncState:
     if status in ACTIVE_STATUSES:
         return SyncState(status=status.value, error=None)
     if status == JobStatus.FAILED:
-        return SyncState(
-            status=None, error=job.meta.get("error", "The last sync failed")
-        )
+        return SyncState(status=None, error=job.meta.get("error", "The last sync failed"))
     return SyncState(status=None, error=None)
 
 
@@ -153,8 +151,6 @@ def _job_id(stack_id: int) -> str:
 
 def _error_message(exc: Exception) -> str:
     if isinstance(exc, GithubException):
-        message = (
-            exc.data.get("message") if isinstance(exc.data, dict) else "unknown error"
-        )
+        message = exc.data.get("message") if isinstance(exc.data, dict) else "unknown error"
         return f"Could not sync commits from GitHub ({exc.status}): {message}"
     return f"Could not sync commits from GitHub: {exc}"

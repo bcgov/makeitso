@@ -67,6 +67,7 @@ class DeleteEnvVarView(MethodView):
         db.session.commit()
         return redirect(url_for("stacks.settings", stack_id=stack.id))
 
+
 class StackContinuousDeployView(MethodView):
     """Continuous deploy will automatically deploy to the target on receiving a Push event"""
 
@@ -76,6 +77,7 @@ class StackContinuousDeployView(MethodView):
         stack.continuous_deploy = not stack.continuous_deploy
         db.session.commit()
         return redirect(url_for("stacks.settings", stack_id=stack.id))
+
 
 def _lock_form(stack: Stack) -> LockForm:
     # Filled from the stack, unless the form was just posted

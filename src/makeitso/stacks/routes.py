@@ -4,7 +4,12 @@ from makeitso.deploys.routes import bp as deploys_bp
 from makeitso.stacks.views.delete import DeleteStackView
 from makeitso.stacks.views.detail import StackCommitsView, StackDetailView
 from makeitso.stacks.views.new import NewStackView
-from makeitso.stacks.views.settings import DeleteEnvVarView, StackLockView, StackSettingsView, StackContinuousDeployView
+from makeitso.stacks.views.settings import (
+    DeleteEnvVarView,
+    StackContinuousDeployView,
+    StackLockView,
+    StackSettingsView,
+)
 
 bp = Blueprint("stacks", __name__)
 
@@ -18,6 +23,9 @@ bp.add_url_rule(
     "/<int:stack_id>/settings/env/<int:env_var_id>/delete",
     view_func=DeleteEnvVarView.as_view("delete_env_var"),
 )
-bp.add_url_rule("/<int:stack_id>/settings/continuous-deploy", view_func=StackContinuousDeployView.as_view("continuous_deploy"))
+bp.add_url_rule(
+    "/<int:stack_id>/settings/continuous-deploy",
+    view_func=StackContinuousDeployView.as_view("continuous_deploy"),
+)
 
 bp.register_blueprint(deploys_bp, url_prefix="/<int:stack_id>/deploys/")

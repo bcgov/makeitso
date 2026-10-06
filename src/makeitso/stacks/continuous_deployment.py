@@ -1,12 +1,11 @@
-from flask import current_app
-from redis import client
 import sqlalchemy as sa
+from flask import current_app
+
 from makeitso.deploys.helpers import deploy_blockers
 from makeitso.deploys.tasks import start_deploy
 from makeitso.engage.loader import load_config
 from makeitso.extensions import db
-
-from makeitso.github import github_client, GitHubRepo
+from makeitso.github import GitHubRepo
 from makeitso.github.tokens import client_for_server
 from makeitso.models.commit import Commit
 from makeitso.models.deploy import Deploy
@@ -15,10 +14,11 @@ from makeitso.models.stack import Stack
 
 def check_continuous_deployment(stack_id: int):
 
-    stack = db.session.get(Stack, stack_id)
-    current_app.logger.info(
-        "Worker: checking continuous deployment for stack %s", stack
-    )
+    stack = db.session.scalar(Stack.active().where(Stack.id == stack_id))
+    # The stack may have been deleted (archived) before the job ran
+    if stack is None:
+        return
+    current_app.logger.info("Worker: checking continuous deployment for stack %s", stack)
 
     if not stack.continuous_deploy:
         current_app.logger.info("Continuous deployment is disabled for stack %s", stack)
@@ -29,17 +29,14 @@ def check_continuous_deployment(stack_id: int):
         return
 
     last_deploy = db.session.scalar(
-        sa.select(Deploy)
-        .where(Deploy.stack_id == stack_id)
-        .order_by(Deploy.id.desc())
-        .limit(1)
+        sa.select(Deploy).where(Deploy.stack_id == stack_id).order_by(Deploy.id.desc()).limit(1)
     )
     latest_commit = db.session.scalar(
-        sa.select(Commit)
-        .where(Commit.stack_id == stack_id)
-        .order_by(Commit.id.desc())
-        .limit(1)
+        sa.select(Commit).where(Commit.stack_id == stack_id).order_by(Commit.id.desc()).limit(1)
     )
+    # Nothing synced yet
+    if latest_commit is None:
+        return
     if last_deploy:
         if last_deploy.commit_id == latest_commit.id:
             # Do not deploy: Commit already deployed

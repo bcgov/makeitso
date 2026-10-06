@@ -3,16 +3,11 @@ import hmac
 import json
 
 import sqlalchemy as sa
-from flask import Blueprint, abort, app, current_app, request
+from flask import Blueprint, abort, current_app, request
 
 from makeitso.extensions import csrf, db
-from makeitso.github.tokens import client_for_server
 from makeitso.models.stack import Stack
 from makeitso.stacks.tasks import enqueue_sync
-from makeitso.deploys.tasks import start_deploy
-from makeitso.github import GitHubRepo, github_client
-from makeitso.engage.loader import load_config
-from makeitso.deploys.helpers import deploy_blockers
 
 bp = Blueprint("webhooks", __name__)
 
@@ -45,9 +40,7 @@ def handle_push_event(payload):
         )
     )
     for s in matching_stacks:
-        current_app.logger.info(
-            "Push to %s/%s, syncing stack %s", repo_full_name, branch, s.id
-        )
+        current_app.logger.info("Push to %s/%s, syncing stack %s", repo_full_name, branch, s.id)
         enqueue_sync(s.id, followup=True)
 
 
@@ -57,17 +50,15 @@ def handle_completed_check_suite(payload):
     org, _, repo = repo_full_name.partition("/")
 
     matching_stacks = db.session.scalars(
-        sa.select(Stack).where(
+        Stack.active().where(
             Stack.organization == org,
             Stack.repository == repo,
             Stack.branch == branch,
-            Stack.archived_at == None,
         )
     )
     for s in matching_stacks:
-        enqueue_sync(
-            s.id, followup=True
-        )  # This could be removed after adding a handle_completed_check_run() that updates the individual check_status records
+        # Could be removed once a handle_completed_check_run() updates single check statuses
+        enqueue_sync(s.id, followup=True)
 
 
 @bp.route("/webhook-receiver", methods=["POST"])

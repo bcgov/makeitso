@@ -24,8 +24,11 @@ class NewStackForm(FlaskForm):
         validators=[DataRequired()],
     )
     continuous_deploy = BooleanField(
-        'Enable Continuous Deployment',
-        render_kw={'class': 'form-check-input custom-checkbox-highlight', 'style': 'border: 1px solid #000000;'}
+        "Enable Continuous Deployment",
+        render_kw={
+            "class": "form-check-input custom-checkbox-highlight",
+            "style": "border: 1px solid #000000;",
+        },
     )
 
     # WTForms runs validate_<field> methods after that field's own validators
