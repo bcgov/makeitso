@@ -29,7 +29,7 @@
     {% endif %}
 {% endmacro %}
 
-{# Who started the deploy; continuous deploys have nobody behind them #}
+{# Who started the deploy: a GitHub login, or "Continuous Deploy" #}
 {% macro deployed_by(deploy) -%}
     {%- if deploy.deployed_by %}@{{ deploy.deployed_by }}{% else %}anonymous{% endif -%}
 {%- endmacro %}

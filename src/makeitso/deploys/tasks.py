@@ -47,7 +47,7 @@ def start_deploy(
     bypass: bool = False,
 ) -> Deploy:
     """Save a deploy and queue it for the worker. `timeout` is engage.yaml's deploy.timeout;
-    `deployed_by` is a GitHub login (None for continuous deploys)"""
+    `deployed_by` is a GitHub login, or "Continuous Deploy" for continuous deploys"""
     last = last_successful_deploy(stack.id)
     deploy = Deploy(
         stack_id=stack.id,
