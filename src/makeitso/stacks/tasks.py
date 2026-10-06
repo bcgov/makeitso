@@ -39,12 +39,10 @@ class SyncState:
 def sync_stack(stack_id: int) -> None:
     """Background job: save a stack's latest commits and checks from GitHub"""
     stack = db.session.scalar(Stack.active().where(Stack.id == stack_id))
-
-    current_app.logger.info("Worker: syncing stack %s", stack)
-
     # The stack may have been deleted (archived) before the job ran
     if stack is None:
         return
+    current_app.logger.info("Worker: syncing stack %s", stack)
     try:
         repo = GitHubRepo.for_stack(client_for_server(), stack)
         sync_commits(stack, repo)
