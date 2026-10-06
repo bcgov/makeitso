@@ -2,6 +2,7 @@ import sqlalchemy as sa
 from flask import current_app
 
 from makeitso.deploys.helpers import deploy_blockers
+from makeitso.deploys.queries import current_deploy
 from makeitso.deploys.tasks import start_deploy
 from makeitso.engage.loader import load_config
 from makeitso.extensions import db
@@ -37,13 +38,12 @@ def check_continuous_deployment(stack_id: int):
     # Nothing synced yet
     if latest_commit is None:
         return
-    if last_deploy:
-        if last_deploy.commit_id == latest_commit.id:
-            # Do not deploy: Commit already deployed
-            return
-        if last_deploy.status == "IN_PROGRESS":
-            # Do not deploy: A deploy is in progress
-            return
+    if last_deploy and last_deploy.commit_id == latest_commit.id:
+        # Do not deploy: Commit already deployed
+        return
+    if current_deploy(stack_id):
+        # Do not deploy: A deploy is in progress
+        return
 
     repo = GitHubRepo.for_stack(client_for_server(), stack)
     config, _ = load_config(repo, latest_commit.commit_sha, stack.environment)
