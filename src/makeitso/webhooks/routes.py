@@ -2,7 +2,6 @@ import hashlib
 import hmac
 import json
 
-import sqlalchemy as sa
 from flask import Blueprint, abort, current_app, request
 
 from makeitso.extensions import csrf, db
@@ -31,33 +30,28 @@ def handle_push_event(payload):
     # Tag pushes and branch deletions don't need a sync
     if not ref.startswith("refs/heads/") or payload.get("deleted"):
         return
+    sync_stacks(payload, ref.removeprefix("refs/heads/"), "Push")
+
+
+def handle_completed_check_suite(payload):
+    # Could be removed once a handle_completed_check_run() updates single check statuses
+    branch = payload.get("check_suite", {}).get("head_branch")
+    sync_stacks(payload, branch, "Check suite completed")
+
+
+def sync_stacks(payload, branch, reason):
+    """Queue a sync for every active stack on this repo and branch"""
     repo_full_name = payload.get("repository", {}).get("full_name")
-    branch = ref.removeprefix("refs/heads/")
     org, _, repo = repo_full_name.partition("/")
     matching_stacks = db.session.scalars(
-        sa.select(Stack).where(
+        Stack.active().where(
             Stack.organization == org, Stack.repository == repo, Stack.branch == branch
         )
     )
     for s in matching_stacks:
-        current_app.logger.info("Push to %s/%s, syncing stack %s", repo_full_name, branch, s.id)
-        enqueue_sync(s.id, followup=True)
-
-
-def handle_completed_check_suite(payload):
-    repo_full_name = payload.get("repository", {}).get("full_name")
-    branch = payload.get("check_suite", {}).get("head_branch")
-    org, _, repo = repo_full_name.partition("/")
-
-    matching_stacks = db.session.scalars(
-        Stack.active().where(
-            Stack.organization == org,
-            Stack.repository == repo,
-            Stack.branch == branch,
+        current_app.logger.info(
+            "%s on %s/%s, syncing stack %s", reason, repo_full_name, branch, s.id
         )
-    )
-    for s in matching_stacks:
-        # Could be removed once a handle_completed_check_run() updates single check statuses
         enqueue_sync(s.id, followup=True)
 
 
@@ -75,18 +69,13 @@ def receive_github_webhook():
     # Extract data from the payload
     payload = request.json
 
-    current_app.logger.info(
-        "Received GitHub webhook: %s with check_suite status: %s",
-        event_type,
-        payload.get("check_suite", {}).get("status", {}),
-    )
-
     # Handle Push Events
     if event_type == "push":
         handle_push_event(payload)
 
     if event_type == "check_suite":
         status = payload.get("check_suite", {}).get("status")
+        current_app.logger.info("Received check_suite webhook with status %s", status)
         if status == "completed":
             handle_completed_check_suite(payload)
 
