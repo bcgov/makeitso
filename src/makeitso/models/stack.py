@@ -93,3 +93,8 @@ class Stack(db.Model):
     def active_or_404(cls, stack_id: int) -> Self:
         """The stack for a page; a 404 if it doesn't exist or was deleted"""
         return db.first_or_404(cls.active().where(cls.id == stack_id))
+
+    def __str__(self):
+        return (
+            f"{self.organization}/{self.repository}[{self.branch}] (environment={self.environment})"
+        )

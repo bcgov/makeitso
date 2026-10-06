@@ -23,6 +23,7 @@ class NewStackForm(FlaskForm):
         description="Picks the engage file (e.g. engage.dev.yaml); scripts get it as ENVIRONMENT",
         validators=[DataRequired()],
     )
+    continuous_deploy = BooleanField("Enable Continuous Deployment")
 
     # WTForms runs validate_<field> methods after that field's own validators
     def validate_repository(self, field: Field) -> None:

@@ -25,6 +25,7 @@ class NewStackView(MethodView):
                 branch=self.form.branch.data,
                 name=self.form.repository.data,
                 environment=self.form.environment.data,
+                continuous_deploy=self.form.continuous_deploy.data,
             )
             db.session.add(stack)
             db.session.commit()
