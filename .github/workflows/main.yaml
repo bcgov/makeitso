@@ -18,3 +18,5 @@ jobs:
     uses: ./.github/workflows/test.yaml
     permissions:
       contents: read
+      # To post the coverage comment on PRs
+      pull-requests: write
