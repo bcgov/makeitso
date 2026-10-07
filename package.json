@@ -1,0 +1,10 @@
+{
+  "name": "makeitso",
+  "author": "ggircs@gov.bc.ca",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/bcgov/makeitso.git",
+  "devDependencies": {
+    "release-it": "^21.1.1",
+    "@release-it/conventional-changelog": "^12.0.0"
+  }
+}

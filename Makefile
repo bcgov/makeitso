@@ -160,3 +160,8 @@ vendor:
 	for f in fonts/BCSans-Regular.woff2 fonts/BCSans-Bold.woff2 LICENSE_OFL.txt; do \
 		curl -fsSL https://cdn.jsdelivr.net/npm/@bcgov/bc-sans@$(BC_SANS_VERSION)/$$f -o $(VENDOR_DIR)/bc-sans/$$(basename $$f); \
 	done
+
+.PHONY: release
+release:
+	@yarn release-it
+	
