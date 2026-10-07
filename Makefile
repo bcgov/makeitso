@@ -163,5 +163,5 @@ vendor:
 
 .PHONY: release
 release:
-	@yarn release-it
-	
+	@yarn install && yarn release-it
+
