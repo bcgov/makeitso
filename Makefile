@@ -30,6 +30,7 @@ help:
 	@echo "make format         Auto-format code and fix lint issues (ruff)"
 	@echo "make typecheck      Check types (ty)"
 	@echo "make test           Run the tests against the mis_test database: ARGS='-k name' to filter"
+	@echo "make coverage       Run the tests and show which code they don't cover (htmlcov/index.html)"
 	@echo "make vendor         Download pinned front-end libraries into static/vendor"
 
 .PHONY: uv
@@ -143,6 +144,12 @@ typecheck:
 test:
 	$(MAKE) create_db DB_NAME=mis_test
 	$(UV) run --env-file .env pytest $(ARGS)
+
+# Same tests, plus which lines they ran; open htmlcov/index.html for the line-by-line view
+.PHONY: coverage
+coverage:
+	$(MAKE) create_db DB_NAME=mis_test
+	$(UV) run --env-file .env pytest --cov --cov-report=term --cov-report=html $(ARGS)
 
 .PHONY: vendor
 vendor:

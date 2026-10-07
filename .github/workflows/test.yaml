@@ -33,4 +33,6 @@ jobs:
       - name: Install dependencies
         run: uv sync
       - name: Run tests
-        run: uv run pytest
+        run: uv run pytest --cov
+      - name: Coverage report
+        run: uv run coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"

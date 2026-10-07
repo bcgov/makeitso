@@ -35,6 +35,7 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "ruff>=0.16.8",
     "ty>=0.0.83",
 ]
@@ -43,6 +44,16 @@ dev = [
 testpaths = ["tests"]
 # Lets test files share a name across folders (tests/main/test_routes.py, tests/stacks/test_routes.py)
 addopts = ["--import-mode=importlib"]
+
+[tool.coverage.run]
+source = ["src/makeitso"]
+# Also checks that each `if` went both ways, not just that its lines ran
+branch = true
+
+[tool.coverage.report]
+# List the lines no test ran, and hide files that are fully covered
+show_missing = true
+skip_covered = true
 
 [tool.ruff]
 line-length = 100
