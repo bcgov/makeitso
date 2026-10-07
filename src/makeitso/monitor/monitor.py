@@ -50,7 +50,9 @@ def _get_all_jobs(queue: Queue):
         CanceledJobRegistry(queue=queue),
     ]
 
-    job_ids = [job_id for registry in registries for job_id in registry.get_job_ids()]
+    # Jobs waiting for a worker are only in the queue itself, not in a registry
+    job_ids = queue.get_job_ids()
+    job_ids += [job_id for registry in registries for job_id in registry.get_job_ids()]
     jobs = Job.fetch_many(job_ids, connection=queue.connection)
 
     return [job for job in jobs if job is not None]
