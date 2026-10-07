@@ -1,0 +1,15 @@
+{% set colors = {"started": "primary", "failed": "danger", "scheduled": "secondary", 
+                    "canceled": "info", "deferred": "warning", "finished": "success"} %}
+
+<li class="d-flex align-items-center gap-3 py-2 border-bottom">
+    <span class="badge text-bg-{{ colors[job.status] }}">
+        {{ job.status }}
+    </span>
+    <span class="small text-muted d-inline-flex align-items-center gap-3 text-nowrap">
+        {{ job.id}}
+    </span>
+    <span class="small text-muted d-inline-flex align-items-center gap-3 text-nowrap">
+        <span title="Started">{{ render_icon("clock") }} {{ job.started_at }}</span>
+        <span title="Elapsed">{{ render_icon("stopwatch") }} {{ job.execution_time }}</span>
+    </span>
+</li>
