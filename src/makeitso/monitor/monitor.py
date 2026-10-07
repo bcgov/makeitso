@@ -11,9 +11,11 @@ from rq.registry import (
     ScheduledJobRegistry,
     StartedJobRegistry,
 )
-from rq.worker_registration import clean_worker_registry
 
 from makeitso.extensions import job_queue
+
+# Most jobs to show per queue and per registry, so old failed jobs don't pile up on the page
+MAX_JOBS = 50
 
 
 @dataclass
@@ -38,8 +40,6 @@ def _get_all_jobs(queue: Queue):
     Queue object doesn't keep track of the jobs in real-time, but the job registries do
     """
 
-    clean_worker_registry(queue)
-
     registries = [
         StartedJobRegistry(queue=queue),
         FinishedJobRegistry(queue=queue),
@@ -50,8 +50,12 @@ def _get_all_jobs(queue: Queue):
     ]
 
     # Jobs waiting for a worker are only in the queue itself, not in a registry
-    job_ids = queue.get_job_ids()
-    job_ids += [job_id for registry in registries for job_id in registry.get_job_ids()]
+    job_ids = queue.get_job_ids(0, MAX_JOBS)
+    job_ids += [
+        job_id
+        for registry in registries
+        for job_id in registry.get_job_ids(0, MAX_JOBS - 1, desc=True)
+    ]
     jobs = Job.fetch_many(job_ids, connection=queue.connection)
 
     return [job for job in jobs if job is not None]
