@@ -75,6 +75,12 @@ redis: redis-install
 worker:
 	OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES $(FLASK) worker
 
+.PHONY: workers
+workers:
+	(trap 'kill 0' SIGINT; \
+	OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES $(FLASK) worker --queue syncs & \
+	OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES $(FLASK) worker --queue deploys)
+
 # Queue syncs for stacks not synced in a while; a running worker does the syncing
 .PHONY: sync_stacks
 sync_stacks:

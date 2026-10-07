@@ -27,6 +27,7 @@ def create_app(config_name: str | None = None) -> Flask:
     from makeitso import models  # noqa: F401  (registers the models with SQLAlchemy)
     from makeitso.auth import bp as auth_bp
     from makeitso.main import bp as main_bp
+    from makeitso.monitor import bp as monitor_bp
     from makeitso.stacks import bp as stacks_bp
     from makeitso.webhooks import bp as webhooks_bp
 
@@ -34,5 +35,6 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(auth_bp, url_prefix="/")
     app.register_blueprint(stacks_bp, url_prefix="/stacks")
     app.register_blueprint(webhooks_bp, url_prefix="/webhooks")
+    app.register_blueprint(monitor_bp, url_prefix="/monitor")
 
     return app

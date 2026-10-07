@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="h3 mb-4">Job queues</h1>
+
+    {% include "monitor/_queues.html" with context %}
+{% endblock %}
