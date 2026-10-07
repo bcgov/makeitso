@@ -1,7 +1,7 @@
-from flask import Blueprint, current_app, render_template
+from flask import Blueprint, render_template
 
 from makeitso.auth.decorators import requires_auth
-from makeitso.monitor.monitor import get_queue_data, get_queues_data
+from makeitso.monitor.monitor import get_queues_data
 
 bp = Blueprint("monitor", __name__)
 

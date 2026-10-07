@@ -67,23 +67,13 @@ def get_queue_data(queue: Queue):
                 id=job.id,
                 status=job.get_status().value,
                 enqueued_at=(
-                    job.enqueued_at.strftime("%b %d, %Y %H:%M")
-                    if job.enqueued_at
-                    else None
+                    job.enqueued_at.strftime("%b %d, %Y %H:%M") if job.enqueued_at else None
                 ),
-                started_at=(
-                    job.started_at.strftime("%b %d, %Y %H:%M")
-                    if job.started_at
-                    else None
-                ),
-                ended_at=(
-                    job.ended_at.strftime("%b %d, %Y %H:%M") if job.ended_at else None
-                ),
+                started_at=(job.started_at.strftime("%b %d, %Y %H:%M") if job.started_at else None),
+                ended_at=(job.ended_at.strftime("%b %d, %Y %H:%M") if job.ended_at else None),
                 result=job.result,
                 execution_time=(
-                    datetime.now().timestamp() - job.started_at
-                    if job.started_at
-                    else None
+                    datetime.now().timestamp() - job.started_at if job.started_at else None
                 ),
             )
             for job in jobs

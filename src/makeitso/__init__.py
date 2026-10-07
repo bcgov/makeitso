@@ -9,9 +9,7 @@ from makeitso.extensions import bootstrap, csrf, db, job_queue, migrate, oauth
 def create_app(config_name: str | None = None) -> Flask:
     config_name = config_name or os.environ.get("MAKEITSO_ENV")
     if config_name not in configs:
-        raise RuntimeError(
-            f"MAKEITSO_ENV must be one of {list(configs)}, got {config_name!r}"
-        )
+        raise RuntimeError(f"MAKEITSO_ENV must be one of {list(configs)}, got {config_name!r}")
 
     app = Flask(__name__)
     app.config.from_object(configs[config_name])
@@ -29,9 +27,9 @@ def create_app(config_name: str | None = None) -> Flask:
     from makeitso import models  # noqa: F401  (registers the models with SQLAlchemy)
     from makeitso.auth import bp as auth_bp
     from makeitso.main import bp as main_bp
+    from makeitso.monitor import bp as monitor_bp
     from makeitso.stacks import bp as stacks_bp
     from makeitso.webhooks import bp as webhooks_bp
-    from makeitso.monitor import bp as monitor_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/")
