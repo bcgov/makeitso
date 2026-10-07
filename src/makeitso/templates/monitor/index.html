@@ -18,7 +18,7 @@
         </div>
         
     </div>
-    {% for queue in queue_data %}
-        {% include "monitor/_queue.html" with context %}
-    {% endfor %}    
+    
+    {% include "monitor/_queues.html" with context %}
+ 
 {% endblock %}

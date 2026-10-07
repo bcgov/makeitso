@@ -13,6 +13,8 @@ from rq.registry import (
 )
 from rq.worker_registration import clean_worker_registry
 
+from makeitso.extensions import job_queue
+
 
 @dataclass
 class QueueData:
@@ -87,3 +89,7 @@ def get_queue_data(queue: Queue):
             for job in jobs
         ],
     )
+
+
+def get_queues_data():
+    return [get_queue_data(job_queue.syncs), get_queue_data(job_queue.deploys)]

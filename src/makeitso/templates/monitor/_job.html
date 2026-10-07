@@ -1,3 +1,4 @@
+{%- from "bootstrap5/utils.html" import render_icon -%}
 {% set colors = {"started": "primary", "failed": "danger", "scheduled": "secondary", 
                     "canceled": "info", "deferred": "warning", "finished": "success"} %}
 
@@ -9,7 +10,7 @@
         {{ job.id}}
     </span>
     <span class="small text-muted d-inline-flex align-items-center gap-3 text-nowrap">
-        <span title="Started">{{ render_icon("clock") }} {{ job.started_at }}</span>
-        <span title="Elapsed">{{ render_icon("stopwatch") }} {{ job.execution_time }}</span>
+        <span title="Started">{{ render_icon("clock") }} Started at: {{ job.started_at }}</span>
+        <span title="Elapsed">{{ render_icon("stopwatch") }} Running time: {{ job.execution_time }}</span>
     </span>
 </li>
