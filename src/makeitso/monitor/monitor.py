@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 from rq import Queue
 from rq.job import Job
@@ -31,7 +31,7 @@ class JobData:
     started_at: str | None
     ended_at: str | None
     result: str | None
-    execution_time: float | None
+    execution_time: str | None
 
 
 def _get_all_jobs(queue: Queue):
@@ -51,9 +51,17 @@ def _get_all_jobs(queue: Queue):
     ]
 
     job_ids = [job_id for registry in registries for job_id in registry.get_job_ids()]
-    jobs = [Job(job_id, connection=queue.connection) for job_id in job_ids]
+    jobs = Job.fetch_many(job_ids, connection=queue.connection)
 
-    return jobs
+    return [job for job in jobs if job is not None]
+
+
+def _execution_time(job: Job) -> str | None:
+    if job.started_at is None:
+        return None
+    end = job.ended_at or datetime.now(UTC)
+    minutes, seconds = divmod(int((end - job.started_at).total_seconds()), 60)
+    return f"{minutes}m {seconds:02d}s"
 
 
 def get_queue_data(queue: Queue):
@@ -72,9 +80,7 @@ def get_queue_data(queue: Queue):
                 started_at=(job.started_at.strftime("%b %d, %Y %H:%M") if job.started_at else None),
                 ended_at=(job.ended_at.strftime("%b %d, %Y %H:%M") if job.ended_at else None),
                 result=job.result,
-                execution_time=(
-                    datetime.now().timestamp() - job.started_at if job.started_at else None
-                ),
+                execution_time=_execution_time(job),
             )
             for job in jobs
         ],
