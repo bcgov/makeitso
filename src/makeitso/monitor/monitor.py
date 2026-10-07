@@ -30,7 +30,6 @@ class JobData:
     enqueued_at: str | None
     started_at: str | None
     ended_at: str | None
-    result: str | None
     execution_time: str | None
 
 
@@ -81,7 +80,6 @@ def get_queue_data(queue: Queue):
                 ),
                 started_at=(job.started_at.strftime("%b %d, %Y %H:%M") if job.started_at else None),
                 ended_at=(job.ended_at.strftime("%b %d, %Y %H:%M") if job.ended_at else None),
-                result=job.result,
                 execution_time=_execution_time(job),
             )
             for job in jobs
