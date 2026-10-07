@@ -5,6 +5,7 @@
   "repository": "https://github.com/bcgov/makeitso.git",
   "devDependencies": {
     "@release-it/conventional-changelog": "^12.0.0",
+    "conventional-changelog-angular": "^9.4.0",
     "release-it": "21.1.0"
   }
 }
