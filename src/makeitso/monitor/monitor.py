@@ -29,17 +29,12 @@ class QueueData:
 class JobData:
     id: str
     status: str
-    enqueued_at: str | None
     started_at: str | None
-    ended_at: str | None
     execution_time: str | None
 
 
 def _get_all_jobs(queue: Queue):
-    """
-    Queue object doesn't keep track of the jobs in real-time, but the job registries do
-    """
-
+    """Jobs waiting for a worker are in the queue, every other state has its own registry"""
     registries = [
         StartedJobRegistry(queue=queue),
         FinishedJobRegistry(queue=queue),
@@ -49,7 +44,6 @@ def _get_all_jobs(queue: Queue):
         CanceledJobRegistry(queue=queue),
     ]
 
-    # Jobs waiting for a worker are only in the queue itself, not in a registry
     job_ids = queue.get_job_ids(0, MAX_JOBS)
     job_ids += [
         job_id
@@ -79,11 +73,7 @@ def get_queue_data(queue: Queue):
             JobData(
                 id=job.id,
                 status=job.get_status().value,
-                enqueued_at=(
-                    job.enqueued_at.strftime("%b %d, %Y %H:%M") if job.enqueued_at else None
-                ),
                 started_at=(job.started_at.strftime("%b %d, %Y %H:%M") if job.started_at else None),
-                ended_at=(job.ended_at.strftime("%b %d, %Y %H:%M") if job.ended_at else None),
                 execution_time=_execution_time(job),
             )
             for job in jobs
