@@ -7,19 +7,12 @@
 {% block content %}
     {% if session.user %}
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="me-4 badge bg-primary p-3">
+            <div>
                 <h1 class="h3 mb-0">Stacks</h1>
             </div>
-            <div>
-                <a href="{{ url_for('monitor.index') }}">
-                    <h1 class="h3 mb-0 text-nowrap">Monitor Job Queues</h1>
-                </a>
-            </div>
-            <div class="container d-inline-flex justify-content-end gap-2">
-                <a class="btn btn-primary d-inline-flex align-items-center gap-2" href="{{ url_for('stacks.new_stack') }}">
-                    {{ render_icon("plus-lg") }} New stack
-                </a>
-            </div>
+            <a class="btn btn-primary d-inline-flex align-items-center gap-2" href="{{ url_for('stacks.new_stack') }}">
+                {{ render_icon("plus-lg") }} New stack
+            </a>
         </div>
 
         {% if stacks %}

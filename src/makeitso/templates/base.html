@@ -24,6 +24,7 @@
       <div class="d-flex align-items-center gap-3">
         {% block navbar_actions %}{% endblock %}
         {% if session.user %}
+          <a class="btn btn-sm btn-primary border-light d-inline-flex align-items-center gap-2" href="{{ url_for('monitor.index') }}">{{ render_icon("activity") }} Jobs</a>
           <div class="navbar-brand me-0">
             <img src="{{ session.user.avatar_url }}" alt="User Avatar" class="rounded-circle" width="30" height="30">
             {{ session.user.login }}@github
