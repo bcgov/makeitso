@@ -49,3 +49,9 @@ GEMINI.md
 .windsurf/
 .aider*
 .codex/
+
+
+# Release-it and npm depds
+.yarn
+node_modules
+.pnp.*
