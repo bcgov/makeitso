@@ -1,4 +1,3 @@
-
 <div hx-get="{{ url_for('monitor.queues_partial') }}" hx-trigger="every 1s" hx-swap="outerHTML">
     {% for queue in queue_data %}
     <section class="pt-3">
@@ -9,9 +8,9 @@
             {% for job in queue.jobs %}
                 {% include "monitor/_job.html" with context %}
             {% else %}
-                <li class="text-muted py-3">No {{ queue.name }} yet.</li>
+                <li class="text-muted py-3">No jobs yet.</li>
             {% endfor %}
         </ul>
     </section>
-    {% endfor %}  
+    {% endfor %}
 </div>
