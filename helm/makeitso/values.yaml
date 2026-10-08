@@ -6,6 +6,8 @@ app:
   env: prod
 
   githubAppSecretName: makeitso-github-app-secret
+  githubOrg: bcgov
+  githubTeam: cas-developers
 
 # Runs deploys
 deployWorker:

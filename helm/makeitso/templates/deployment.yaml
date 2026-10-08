@@ -58,6 +58,10 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.app.githubAppSecretName | quote }}
                   key: ghWebhookSecret
+            - name: GITHUB_ORG
+              value: {{ .Values.app.githubOrg | quote }}
+            - name: GITHUB_TEAM
+              value: {{ .Values.app.githubTeam | quote }}
           readinessProbe:
             httpGet:
               path: /healthz
