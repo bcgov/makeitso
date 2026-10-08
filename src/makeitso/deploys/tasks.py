@@ -13,8 +13,7 @@ from rq import Queue
 from rq.job import Job, JobStatus
 
 from makeitso.deploys.queries import last_successful_deploy
-from makeitso.engage import EngageConfig, parse_config
-from makeitso.engage.config import config_files
+from makeitso.engage.loader import read_config
 from makeitso.extensions import db, job_queue
 from makeitso.models.commit import Commit
 from makeitso.models.deploy import Deploy, DeployStatus
@@ -180,7 +179,8 @@ def _run(deploy: Deploy, workdir: Path, log: _Log) -> DeployStatus:
     status = _stream(["bash", "bin/checkout.sh"], env, log, CHECKOUT_TIMEOUT, job_id)
     if status is not DeployStatus.SUCCEEDED:
         return status
-    config, name = _read_config(workdir, deploy.stack.environment)
+    # An invalid file raises EngageConfigError; run_deploy puts its message in the log
+    config, name = read_config(workdir, deploy.stack.environment)
     log.write(f"\nSettings from {name}\n" if name else "\nNo engage.yaml, using the defaults\n")
     log.write(f"\n$ bash {config.deploy.file}  (timeout {config.deploy.timeout}s)\n")
     # Run from the checkout, so the script's relative paths work
@@ -192,17 +192,6 @@ def _run(deploy: Deploy, workdir: Path, log: _Log) -> DeployStatus:
         job_id,
         cwd=workdir,
     )
-
-
-def _read_config(workdir: Path, environment: str) -> tuple[EngageConfig, str | None]:
-    """engage.<environment>.yaml from the checkout, else engage.yaml, else the defaults.
-    Returns the config and the file it came from"""
-    for name in config_files(environment):
-        path = workdir / name
-        if path.is_file():
-            # An invalid file raises EngageConfigError; run_deploy puts its message in the log
-            return parse_config(path.read_text(), name), name
-    return EngageConfig(), None
 
 
 def _stream(
