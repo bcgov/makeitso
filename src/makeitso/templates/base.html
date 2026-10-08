@@ -25,13 +25,23 @@
         {% block navbar_actions %}{% endblock %}
         {% if session.user %}
           <a class="btn btn-sm btn-primary border-light d-inline-flex align-items-center gap-2" href="{{ url_for('monitor.index') }}">{{ render_icon("activity") }} Jobs</a>
-          <div class="navbar-brand me-0">
-            <img src="{{ session.user.avatar_url }}" alt="User Avatar" class="rounded-circle" width="30" height="30">
-            {{ session.user.login }}@github
-            <form method="post" action="{{ url_for('auth.logout') }}" class="d-inline">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-primary border-light ms-3 d-inline-flex align-items-center gap-2">{{ render_icon("box-arrow-right") }} Logout</button>
-            </form>
+          <div class="dropdown">
+            <button type="button" class="btn p-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu">
+              <img src="{{ session.user.avatar_url }}" alt="{{ session.user.login }}" class="rounded-circle" width="32" height="32">
+            </button>
+            <div class="dropdown-menu dropdown-menu-end text-nowrap p-3" data-bs-theme="light">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <img src="{{ session.user.avatar_url }}" alt="" class="rounded-circle" width="48" height="48">
+                <div>
+                  {% if session.user.name %}<div class="fw-bold text-primary">{{ session.user.name }}</div>{% endif %}
+                  <a href="{{ session.user.html_url }}" target="_blank" rel="noopener">@{{ session.user.login }}</a>
+                </div>
+              </div>
+              <form method="post" action="{{ url_for('auth.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center gap-2">{{ render_icon("box-arrow-right") }} Logout</button>
+              </form>
+            </div>
           </div>
         {# The landing page has its own big login button #}
         {% elif request.endpoint != "main.index" %}
