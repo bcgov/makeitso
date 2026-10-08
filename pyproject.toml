@@ -34,6 +34,8 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "fakeredis>=2.39.0",
+    "polyfactory>=3.3.0",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.8",
