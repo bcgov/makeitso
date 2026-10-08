@@ -20,6 +20,16 @@ def client(app):
     return app.test_client()
 
 
+@pytest.fixture
+def logged_in_client(app):
+    client = app.test_client()
+
+    with client.session_transaction() as session:
+        session["user"] = {"login": "testuser", "avatar_url": ""}
+
+    return client
+
+
 # Empty every table after each test, so tests don't see each other's rows
 @pytest.fixture(autouse=True)
 def clean_db(app):
