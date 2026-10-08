@@ -62,6 +62,8 @@ class PytestConfig(LocalConfig):
     SECRET_KEY = "pytest"
     # Fixed name, so tests never wipe the real database
     SQLALCHEMY_DATABASE_URI = _database_uri("mis_test")
+    # Disable CSRF so we can run post() requests
+    WTF_CSRF_ENABLED = False
 
 
 configs = {
