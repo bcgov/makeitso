@@ -10,6 +10,7 @@ app:
 # Runs deploys
 deployWorker:
   replicas: 1
+  serviceAccountName: cas-provision-makeitso-deployer
 
 # Runs stack syncs
 syncWorker:
