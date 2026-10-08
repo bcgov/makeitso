@@ -4,6 +4,7 @@ import pytest
 import sqlalchemy as sa
 from flask import url_for
 
+from makeitso.deploys import views
 from makeitso.extensions import db, job_queue
 from makeitso.models.deploy import Deploy
 from tests.factories import (
@@ -84,6 +85,25 @@ class TestStartDeployPage:
 
     def test_while_one_runs(self, client, login):
         running = start_running_deploy()
+        login()
+
+        response = client.post(_new_url(running.commit))
+
+        assert response.location == _deploy_url(running)
+        assert _deploys(running.stack_id) == [running]
+
+    def test_double_click(self, client, login, monkeypatch):
+        running = start_running_deploy()
+        real_current_deploy = views.current_deploy
+        checks = []
+
+        # The first check misses the running deploy, as when two clicks arrive together;
+        # the database's one-running-deploy rule then refuses the second save
+        def current_deploy(stack_id):
+            checks.append(stack_id)
+            return None if len(checks) == 1 else real_current_deploy(stack_id)
+
+        monkeypatch.setattr(views, "current_deploy", current_deploy)
         login()
 
         response = client.post(_new_url(running.commit))

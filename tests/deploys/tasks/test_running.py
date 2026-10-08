@@ -58,6 +58,15 @@ class TestStream:
         # Ignores SIGTERM, so only SIGKILL stops it
         assert self._run_bash(deploy, "trap '' TERM; sleep 30") is DeployStatus.INTERRUPTED
 
+    def test_kills_after_grace_period(self, monkeypatch):
+        # One second instead of 30 minutes between SIGTERM and SIGKILL
+        monkeypatch.setattr(tasks, "DEPLOY_TIMEOUT", 1)
+
+        # Ignores SIGTERM, like a stuck script; only SIGKILL stops it
+        status = self._run_bash(start_running_deploy(), "trap '' TERM; sleep 30", timeout=1)
+
+        assert status is DeployStatus.TIMED_OUT
+
     def test_stops_child_processes(self):
         deploy = start_running_deploy()
 
@@ -73,6 +82,27 @@ class TestStream:
                 return
             time.sleep(0.1)
         pytest.fail("The child process is still running")
+
+
+class TestLog:
+    def test_saves_while_running(self, monkeypatch):
+        # Save on every write instead of once a second
+        monkeypatch.setattr(tasks, "SAVE_EVERY", 0)
+        deploy = start_running_deploy()
+
+        _Log(deploy).write("cloning\n")
+
+        # Read back from the database, so the page polling the log would see it
+        db.session.expire(deploy)
+        assert deploy.output == "cloning\n"
+
+    def test_waits_between_saves(self):
+        deploy = start_running_deploy()
+
+        _Log(deploy).write("cloning\n")
+
+        db.session.expire(deploy)
+        assert deploy.output == ""
 
 
 class TestScriptEnv:
@@ -110,7 +140,11 @@ class TestRunDeploy:
     def fake_checkout(self, monkeypatch):
         real_stream = tasks._stream
 
-        def fake_checkout(files: dict[str, str] | None = None, error: Exception | None = None):
+        def fake_checkout(
+            files: dict[str, str] | None = None,
+            error: Exception | None = None,
+            status: DeployStatus = DeployStatus.SUCCEEDED,
+        ):
             def stream(args, env, log, timeout, job_id, cwd=None):
                 if args != ["bash", "bin/checkout.sh"]:
                     return real_stream(args, env, log, timeout, job_id, cwd)
@@ -120,7 +154,7 @@ class TestRunDeploy:
                 for name, text in (files or {}).items():
                     with open(os.path.join(env["WORKDIR"], name), "w") as file:
                         file.write(text)
-                return DeployStatus.SUCCEEDED
+                return status
 
             monkeypatch.setattr(tasks, "_stream", stream)
 
@@ -155,6 +189,16 @@ class TestRunDeploy:
 
         assert deploy.status is DeployStatus.FAILED
         assert deploy.output.endswith("\nFailed\n")
+
+    def test_checkout_fails(self, fake_checkout):
+        deploy = start_running_deploy()
+        fake_checkout({"deploy.sh": "echo deploying"}, status=DeployStatus.FAILED)
+
+        run_deploy(deploy.id)
+
+        # Stops after the checkout: the script never runs
+        assert deploy.status is DeployStatus.FAILED
+        assert "deploying" not in deploy.output
 
     def test_crash(self, workspace, fake_checkout):
         deploy = start_running_deploy()
