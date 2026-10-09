@@ -4,6 +4,7 @@ from flask import Flask
 
 from makeitso.config import configs
 from makeitso.extensions import bootstrap, csrf, db, job_queue, migrate, oauth
+from makeitso.local_time import local_time
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -23,6 +24,7 @@ def create_app(config_name: str | None = None) -> Flask:
     migrate.init_app(app, db)
     job_queue.init_app(app)
     oauth.init_app(app)
+    app.add_template_filter(local_time)
 
     from makeitso import models  # noqa: F401  (registers the models with SQLAlchemy)
     from makeitso.auth import bp as auth_bp

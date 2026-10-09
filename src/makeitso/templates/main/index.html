@@ -56,7 +56,7 @@
                             {% elif state.latest %}
                                 {{ status_badge(state.latest.status) }}
                                 <span class="small text-muted">
-                                    {{ state.latest.started_at.strftime("%b %d, %H:%M") }} by {{ deployed_by(state.latest) }}
+                                    {{ state.latest.started_at|local_time("%b %d, %H:%M Vancouver time") }} by {{ deployed_by(state.latest) }}
                                 </span>
                             {% else %}
                                 <span class="text-muted">no deploys yet</span>
