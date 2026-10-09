@@ -27,7 +27,7 @@
                         {{ bypass_badge(deploy) }}
                     </td>
                     <td class="text-nowrap">{{ deployed_by(deploy) }}</td>
-                    <td class="text-nowrap">{{ deploy.started_at.strftime("%b %d, %Y %H:%M") }}</td>
+                    <td class="text-nowrap">{{ deploy.started_at|local_time }}</td>
                     <td class="text-nowrap">{{ deploy.elapsed }}</td>
                     <td><a class="text-nowrap text-decoration-none" href="{{ url_for('stacks.deploys.detail', stack_id=stack.id, deploy_id=deploy.id) }}">{{ render_icon("terminal") }} View log</a></td>
                 </tr>

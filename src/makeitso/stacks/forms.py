@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from github import GithubException
-from wtforms import BooleanField, Field, StringField, TextAreaField
+from wtforms import BooleanField, Field, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Regexp, ValidationError
 
 from makeitso.extensions import db
@@ -81,13 +81,14 @@ def _strip(value: str | None) -> str | None:
 
 
 class LockForm(FlaskForm):
-    locked = BooleanField("Lock this stack")
+    lock = SubmitField("Lock")
+    unlock = SubmitField("Unlock")
     lock_reason = TextAreaField(
         "Reason", description="Shown on the stack page. Needed when locking.", filters=[_strip]
     )
 
     def validate_lock_reason(self, field: Field) -> None:
-        if self.locked.data and not field.data:
+        if self.lock.data and not field.data:
             raise ValidationError("Give a reason for locking the stack")
 
 

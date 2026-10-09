@@ -27,7 +27,7 @@
                target="_blank" rel="noopener" class="text-muted">#{{ commit.pull_request_number }}</a>
         {% endif %}
         <div class="small text-muted">
-            <code>{{ commit.short_sha }}</code> · {{ commit.committed_at.strftime("%b %d, %Y %H:%M") }}
+            <code>{{ commit.short_sha }}</code> · {{ commit.committed_at|local_time }}
         </div>
     </div>
     {% if show_deploy %}

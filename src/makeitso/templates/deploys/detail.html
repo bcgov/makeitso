@@ -23,7 +23,7 @@
     <p class="mb-2">{{ deploy.commit.commit_message }}</p>
     {% set details = [
         ("person", "Author", deploy.commit.author_name),
-        ("clock", "Started", deploy.started_at.strftime("%b %d, %Y %H:%M")),
+        ("clock", "Started", deploy.started_at|local_time),
         ("person-check", "Deployed by", deployed_by(deploy)),
     ] %}
     <ul class="list-inline small text-muted mb-4">

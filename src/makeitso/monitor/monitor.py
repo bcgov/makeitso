@@ -13,6 +13,7 @@ from rq.registry import (
 )
 
 from makeitso.extensions import job_queue
+from makeitso.local_time import local_time
 
 # Most jobs to show per queue and per registry, so old failed jobs don't pile up on the page
 MAX_JOBS = 50
@@ -73,7 +74,7 @@ def get_queue_data(queue: Queue):
             JobData(
                 id=job.id,
                 status=job.get_status().value,
-                started_at=(job.started_at.strftime("%b %d, %Y %H:%M") if job.started_at else None),
+                started_at=(local_time(job.started_at) if job.started_at else None),
                 execution_time=_execution_time(job),
             )
             for job in jobs

@@ -26,6 +26,7 @@ dependencies = [
     "requests>=2.34.2",
     "rq>=2.12.0",
     "psycopg[binary]>=3.3.6",
+    "tzdata>=2026.4",
 ]
 
 [build-system]

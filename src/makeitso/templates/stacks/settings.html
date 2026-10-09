@@ -28,9 +28,13 @@
     </p>
     <form method="post" action="{{ url_for('stacks.lock', stack_id=stack.id) }}" class="mb-5" style="max-width: 40rem" novalidate>
         {{ lock_form.hidden_tag() }}
-        {{ render_field(lock_form.locked) }}
-        {{ render_field(lock_form.lock_reason, rows=2, placeholder="e.g. Release freeze until Monday") }}
-        <button type="submit" class="btn btn-primary">Save</button>
+        {% if stack.locked %}
+            <p>Locked: {{ stack.lock_reason }}</p>
+            <button type="submit" name="lock-unlock" value="y" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">{{ render_icon("unlock-fill") }} Unlock</button>
+        {% else %}
+            {{ render_field(lock_form.lock_reason, rows=2, placeholder="e.g. Release freeze until Monday") }}
+            <button type="submit" name="lock-lock" value="y" class="btn btn-warning d-inline-flex align-items-center gap-2">{{ render_icon("lock-fill") }} Lock</button>
+        {% endif %}
     </form>
 
     <h1 class="h4 pb-2">Environment variables</h1>
