@@ -47,7 +47,7 @@ class StackLockView(MethodView):
         form = _lock_form(stack)
         if not form.validate_on_submit():
             return _render(stack, form, _env_var_form())
-        stack.locked = form.locked.data
+        stack.locked = form.lock.data
         stack.lock_reason = form.lock_reason.data if stack.locked else None
         db.session.commit()
         flash("Stack locked" if stack.locked else "Stack unlocked", "success")

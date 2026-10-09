@@ -35,7 +35,7 @@
                             <a href="{{ stack_url }}" class="fw-semibold">{{ stack.organization }}/{{ stack.repository }}</a>
                             <span class="badge rounded-pill text-bg-warning ms-1">{{ stack.environment }}</span>
                             {% if stack.locked %}
-                                <span class="badge text-bg-secondary ms-1" title="{{ stack.lock_reason }}">Locked</span>
+                                <span class="ms-1" title="Locked: {{ stack.lock_reason }}">{{ render_icon("lock-fill", color="secondary") }}</span>
                             {% endif %}
                         </td>
                         <td><code>{{ stack.branch }}</code></td>
