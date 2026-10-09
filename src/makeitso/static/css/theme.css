@@ -14,7 +14,9 @@
   font-display: swap;
 }
 
-:root {
+/* Also on [data-bs-theme=light], where Bootstrap resets its colours to the defaults */
+:root,
+[data-bs-theme="light"] {
   --bs-body-font-family: "BC Sans", "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --bc-primary-blue: #003366;
   --bc-bg-blue: #38598a;

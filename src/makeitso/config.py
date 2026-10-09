@@ -30,6 +30,9 @@ class Config:
     # Used by background jobs, which have no logged-in user
     GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
     GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET")
+    # Only members of this team can log in
+    GITHUB_ORG = os.environ.get("GITHUB_ORG")
+    GITHUB_TEAM = os.environ.get("GITHUB_TEAM")
 
     # Where deploys check out code; Helm mounts /workspace
     DEPLOY_WORKSPACE = os.environ.get("DEPLOY_WORKSPACE", "/tmp/makeitso-workspace")
